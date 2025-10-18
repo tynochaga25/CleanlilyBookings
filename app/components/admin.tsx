@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Switch,
   Modal,
   TextInput,
@@ -14,14 +13,14 @@ import {
   LogBox,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { 
-  Users, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  CircleCheck as CheckCircle, 
-  Circle as XCircle, 
+import {
+  Users,
+  Calendar,
+  Clock,
+  MapPin,
+  Phone,
+  CircleCheck as CheckCircle,
+  Circle as XCircle,
   CircleAlert as AlertCircle,
   Settings,
   Plus,
@@ -36,15 +35,12 @@ import { createClient } from '@supabase/supabase-js';
 
 LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component.']);
 
-// Initialize Supabase client
 const supabase = createClient(
   'https://ryqjkslsgfcycxybdeoj.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5cWprc2xzZ2ZjeWN4eWJkZW9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MTk5NzMsImV4cCI6MjA3MzA5NTk3M30.G3TTKLpIdBbpcvaO7_SWDuAsvehLI5mT0U85eM5uw50'
 );
 
-// API service functions using Supabase
 const apiService = {
-  // Fetch all bookings with related data
   getBookings: async (statusFilter = 'all') => {
     try {
       let query = supabase
@@ -65,7 +61,6 @@ const apiService = {
 
       if (error) throw error;
 
-      // Format the data to match the expected structure
       return data.map(booking => ({
         id: booking.id,
         client_full_name: booking.client?.full_name || 'Unknown',
@@ -84,7 +79,6 @@ const apiService = {
     }
   },
 
-  // Fetch all services
   getServices: async () => {
     try {
       const { data, error } = await supabase
@@ -100,17 +94,14 @@ const apiService = {
     }
   },
 
-  // Fetch dashboard statistics
   getStats: async () => {
     try {
-      // Get total bookings count
       const { count: totalBookings, error: bookingsError } = await supabase
         .from('bookings')
         .select('*', { count: 'exact', head: true });
 
       if (bookingsError) throw bookingsError;
 
-      // Get pending bookings count
       const { count: pendingBookings, error: pendingError } = await supabase
         .from('bookings')
         .select('*', { count: 'exact', head: true })
@@ -118,7 +109,6 @@ const apiService = {
 
       if (pendingError) throw pendingError;
 
-      // Get completed bookings count
       const { count: completedBookings, error: completedError } = await supabase
         .from('bookings')
         .select('*', { count: 'exact', head: true })
@@ -126,7 +116,6 @@ const apiService = {
 
       if (completedError) throw completedError;
 
-      // Get total customers count
       const { count: totalCustomers, error: customersError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
@@ -146,7 +135,6 @@ const apiService = {
     }
   },
 
-  // Update booking status
   updateBookingStatus: async (bookingId, status) => {
     try {
       const { data, error } = await supabase
@@ -163,7 +151,6 @@ const apiService = {
     }
   },
 
-  // Add a new service
   addService: async (serviceData) => {
     try {
       const { data, error } = await supabase
@@ -182,7 +169,6 @@ const apiService = {
     }
   },
 
-  // Update an existing service
   updateService: async (serviceId, serviceData) => {
     try {
       const { data, error } = await supabase
@@ -202,7 +188,6 @@ const apiService = {
     }
   },
 
-  // Delete a service
   deleteService: async (serviceId) => {
     try {
       const { error } = await supabase
@@ -218,7 +203,6 @@ const apiService = {
     }
   },
 
-  // Get all customers
   getCustomers: async () => {
     try {
       const { data, error } = await supabase
@@ -235,7 +219,6 @@ const apiService = {
     }
   },
 
-  // Delete a booking
   deleteBooking: async (bookingId) => {
     try {
       const { error } = await supabase
@@ -251,7 +234,6 @@ const apiService = {
     }
   },
 
-  // Fetch all feedbacks
   getFeedbacks: async () => {
     try {
       const { data, error } = await supabase
@@ -267,7 +249,6 @@ const apiService = {
     }
   },
 
-  // Delete a feedback
   deleteFeedback: async (feedbackId) => {
     try {
       const { error } = await supabase
@@ -284,14 +265,94 @@ const apiService = {
   },
 };
 
-// Helper function to check if booking can be marked as complete
 const canMarkAsComplete = (booking) => {
   const now = new Date();
   const bookingDate = new Date(`${booking.scheduled_date}T${booking.scheduled_time}`);
   return now >= bookingDate;
 };
 
-// Simple MyBookings component to render within AdminScreen
+const ConfirmDialog = ({ visible, title, message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel', confirmColor = '#059669' }) => {
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onCancel}
+    >
+      <View style={styles.confirmOverlay}>
+        <View style={styles.confirmDialog}>
+          <Text style={styles.confirmTitle}>{title}</Text>
+          <Text style={styles.confirmMessage}>{message}</Text>
+          <View style={styles.confirmActions}>
+            <TouchableOpacity
+              style={[styles.confirmButton, styles.confirmCancelButton]}
+              onPress={onCancel}
+            >
+              <Text style={styles.confirmCancelText}>{cancelText}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.confirmButton, { backgroundColor: confirmColor }]}
+              onPress={onConfirm}
+            >
+              <Text style={styles.confirmConfirmText}>{confirmText}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const SuccessDialog = ({ visible, message, onClose }) => {
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.confirmOverlay}>
+        <View style={styles.confirmDialog}>
+          <CheckCircle size={48} color="#059669" style={{ alignSelf: 'center', marginBottom: 16 }} />
+          <Text style={styles.confirmTitle}>Success</Text>
+          <Text style={styles.confirmMessage}>{message}</Text>
+          <TouchableOpacity
+            style={[styles.confirmButton, { backgroundColor: '#059669', width: '100%' }]}
+            onPress={onClose}
+          >
+            <Text style={styles.confirmConfirmText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const ErrorDialog = ({ visible, message, onClose }) => {
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.confirmOverlay}>
+        <View style={styles.confirmDialog}>
+          <AlertCircle size={48} color="#EF4444" style={{ alignSelf: 'center', marginBottom: 16 }} />
+          <Text style={styles.confirmTitle}>Error</Text>
+          <Text style={styles.confirmMessage}>{message}</Text>
+          <TouchableOpacity
+            style={[styles.confirmButton, { backgroundColor: '#EF4444', width: '100%' }]}
+            onPress={onClose}
+          >
+            <Text style={styles.confirmConfirmText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 const MyBookingsView = ({ bookings, onBack, onStatusUpdate, onDeleteBooking }) => {
   const getStatusColor = (status) => {
     switch (status) {
@@ -324,33 +385,33 @@ const MyBookingsView = ({ bookings, onBack, onStatusUpdate, onDeleteBooking }) =
             <Text style={styles.quotationText}>Price to be quoted</Text>
           )}
         </View>
-        
+
         <View style={styles.bookingStatus}>
           {getStatusIcon(booking.status)}
           <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
-            {booking.status.split('_').map(word => 
+            {booking.status.split('_').map(word =>
               word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' ')}
           </Text>
         </View>
       </View>
-      
+
       <View style={styles.bookingDetails}>
         <View style={styles.detailRow}>
           <Clock size={16} color="#6B7280" />
           <Text style={styles.detailText}>{booking.scheduled_time} on {booking.scheduled_date}</Text>
         </View>
-        
+
         <View style={styles.detailRow}>
           <MapPin size={16} color="#6B7280" />
           <Text style={styles.detailText}>{booking.address}</Text>
         </View>
-        
+
         <View style={styles.detailRow}>
           <Phone size={16} color="#6B7280" />
           <Text style={styles.detailText}>{booking.client_phone}</Text>
         </View>
-        
+
         {booking.special_instructions && (
           <View style={styles.detailRow}>
             <ClipboardList size={16} color="#6B7280" />
@@ -360,7 +421,7 @@ const MyBookingsView = ({ bookings, onBack, onStatusUpdate, onDeleteBooking }) =
           </View>
         )}
       </View>
-      
+
       {booking.status === 'pending' && (
         <View style={styles.bookingActions}>
           <TouchableOpacity
@@ -369,7 +430,7 @@ const MyBookingsView = ({ bookings, onBack, onStatusUpdate, onDeleteBooking }) =
           >
             <Text style={styles.actionBtnText}>Confirm</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: '#DC2626' }]}
             onPress={() => onStatusUpdate(booking.id, 'cancelled')}
@@ -378,13 +439,13 @@ const MyBookingsView = ({ bookings, onBack, onStatusUpdate, onDeleteBooking }) =
           </TouchableOpacity>
         </View>
       )}
-      
+
       {booking.status === 'confirmed' && (
         <TouchableOpacity
           style={[
-            styles.actionBtn, 
-            canMarkAsComplete(booking) 
-              ? { backgroundColor: '#6366F1' } 
+            styles.actionBtn,
+            canMarkAsComplete(booking)
+              ? { backgroundColor: '#6366F1' }
               : { backgroundColor: '#9CA3AF', opacity: 0.7 }
           ]}
           onPress={canMarkAsComplete(booking) ? () => onStatusUpdate(booking.id, 'completed') : null}
@@ -396,7 +457,6 @@ const MyBookingsView = ({ bookings, onBack, onStatusUpdate, onDeleteBooking }) =
         </TouchableOpacity>
       )}
 
-      {/* Delete Booking Button */}
       <TouchableOpacity
         style={[styles.actionBtn, { backgroundColor: '#EF4444', marginTop: 8 }]}
         onPress={() => onDeleteBooking(booking.id)}
@@ -417,7 +477,7 @@ const MyBookingsView = ({ bookings, onBack, onStatusUpdate, onDeleteBooking }) =
           <Text style={styles.headerTitle}>All Bookings</Text>
           <Text style={styles.headerSubtitle}>Manage customer bookings</Text>
         </View>
-        <View style={{ width: 24 }} /> {/* Spacer for balance */}
+        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.content}>
@@ -449,20 +509,38 @@ export default function AdminScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
-  const [newService, setNewService] = useState({ 
-    name: '', 
-    description: '', 
-    price: '', 
-    duration: '', 
+  const [newService, setNewService] = useState({
+    name: '',
+    description: '',
+    price: '',
+    duration: '',
     category: '',
-    requiresQuotation: false 
+    requiresQuotation: false
   });
   const [editingService, setEditingService] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' or 'bookings'
+  const [activeView, setActiveView] = useState('dashboard');
 
-  // Initialize data
+  const [confirmDialog, setConfirmDialog] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    confirmText: 'Confirm',
+    confirmColor: '#059669'
+  });
+
+  const [successDialog, setSuccessDialog] = useState({
+    visible: false,
+    message: ''
+  });
+
+  const [errorDialog, setErrorDialog] = useState({
+    visible: false,
+    message: ''
+  });
+
   useEffect(() => {
     loadData();
   }, []);
@@ -478,14 +556,17 @@ export default function AdminScreen() {
         apiService.getCustomers(),
         apiService.getFeedbacks()
       ]);
-      
+
       setBookings(bookingsData);
       setServices(servicesData);
       setStats(statsData);
       setCustomers(customersData);
       setFeedbacks(feedbacksData);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load data. Please try again.');
+      setErrorDialog({
+        visible: true,
+        message: 'Failed to load data. Please try again.'
+      });
       console.error('Error loading data:', error);
     } finally {
       setRefreshing(false);
@@ -498,113 +579,124 @@ export default function AdminScreen() {
   };
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
-    // Find the booking to check if it can be marked as complete
     const booking = bookings.find(b => b.id === bookingId);
-    
+
     if (newStatus === 'completed' && booking && !canMarkAsComplete(booking)) {
-      Alert.alert(
-        'Cannot Complete',
-        'This booking cannot be marked as complete until the scheduled date and time has been reached.',
-        [{ text: 'OK' }]
-      );
+      setErrorDialog({
+        visible: true,
+        message: 'This booking cannot be marked as complete until the scheduled date and time has been reached.'
+      });
       return;
     }
 
-    Alert.alert(
-      'Update Status',
-      `Change booking status to ${newStatus}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Confirm', 
-          onPress: async () => {
-            try {
-              await apiService.updateBookingStatus(bookingId, newStatus);
-              
-              // Update local state
-              const updatedBookings = bookings.map(booking => 
-                booking.id === bookingId ? { ...booking, status: newStatus } : booking
-              );
-              setBookings(updatedBookings);
-              
-              // Refresh stats to get updated counts
-              const statsData = await apiService.getStats();
-              setStats(statsData);
-              
-              Alert.alert('Success', `Booking status updated to ${newStatus}`);
-            } catch (error) {
-              Alert.alert('Error', 'Failed to update booking status.');
-              console.error('Error updating booking:', error);
-            }
-          }
-        },
-      ]
-    );
+    setConfirmDialog({
+      visible: true,
+      title: 'Update Status',
+      message: `Change booking status to ${newStatus}?`,
+      confirmText: 'Confirm',
+      confirmColor: '#059669',
+      onConfirm: async () => {
+        setConfirmDialog({ ...confirmDialog, visible: false });
+        try {
+          await apiService.updateBookingStatus(bookingId, newStatus);
+
+          const updatedBookings = bookings.map(booking =>
+            booking.id === bookingId ? { ...booking, status: newStatus } : booking
+          );
+          setBookings(updatedBookings);
+
+          const statsData = await apiService.getStats();
+          setStats(statsData);
+
+          setSuccessDialog({
+            visible: true,
+            message: `Booking status updated to ${newStatus}`
+          });
+        } catch (error) {
+          setErrorDialog({
+            visible: true,
+            message: 'Failed to update booking status.'
+          });
+          console.error('Error updating booking:', error);
+        }
+      }
+    });
   };
 
   const handleDeleteBooking = async (bookingId) => {
-    Alert.alert(
-      'Delete Booking',
-      'Are you sure you want to delete this booking? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiService.deleteBooking(bookingId);
-              const updatedBookings = bookings.filter(booking => booking.id !== bookingId);
-              setBookings(updatedBookings);
-              
-              // Refresh stats
-              const statsData = await apiService.getStats();
-              setStats(statsData);
-              
-              Alert.alert('Success', 'Booking deleted successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete booking.');
-              console.error('Error deleting booking:', error);
-            }
-          }
-        },
-      ]
-    );
+    setConfirmDialog({
+      visible: true,
+      title: 'Delete Booking',
+      message: 'Are you sure you want to delete this booking? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColor: '#EF4444',
+      onConfirm: async () => {
+        setConfirmDialog({ ...confirmDialog, visible: false });
+        try {
+          await apiService.deleteBooking(bookingId);
+          const updatedBookings = bookings.filter(booking => booking.id !== bookingId);
+          setBookings(updatedBookings);
+
+          const statsData = await apiService.getStats();
+          setStats(statsData);
+
+          setSuccessDialog({
+            visible: true,
+            message: 'Booking deleted successfully'
+          });
+        } catch (error) {
+          setErrorDialog({
+            visible: true,
+            message: 'Failed to delete booking.'
+          });
+          console.error('Error deleting booking:', error);
+        }
+      }
+    });
   };
 
   const handleDeleteFeedback = async (feedbackId) => {
-    Alert.alert(
-      'Delete Feedback',
-      'Are you sure you want to delete this feedback? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiService.deleteFeedback(feedbackId);
-              const updatedFeedbacks = feedbacks.filter(feedback => feedback.id !== feedbackId);
-              setFeedbacks(updatedFeedbacks);
-              Alert.alert('Success', 'Feedback deleted successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete feedback.');
-              console.error('Error deleting feedback:', error);
-            }
-          }
-        },
-      ]
-    );
+    setConfirmDialog({
+      visible: true,
+      title: 'Delete Feedback',
+      message: 'Are you sure you want to delete this feedback? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColor: '#EF4444',
+      onConfirm: async () => {
+        setConfirmDialog({ ...confirmDialog, visible: false });
+        try {
+          await apiService.deleteFeedback(feedbackId);
+          const updatedFeedbacks = feedbacks.filter(feedback => feedback.id !== feedbackId);
+          setFeedbacks(updatedFeedbacks);
+          setSuccessDialog({
+            visible: true,
+            message: 'Feedback deleted successfully'
+          });
+        } catch (error) {
+          setErrorDialog({
+            visible: true,
+            message: 'Failed to delete feedback.'
+          });
+          console.error('Error deleting feedback:', error);
+        }
+      }
+    });
   };
 
   const handleAddService = async () => {
     if (!newService.name || !newService.duration || !newService.category) {
-      Alert.alert('Error', 'Please fill all required fields');
+      setErrorDialog({
+        visible: true,
+        message: 'Please fill all required fields'
+      });
       return;
     }
 
     if (!newService.requiresQuotation && !newService.price) {
-      Alert.alert('Error', 'Please enter a price or select "Requires Quotation"');
+      setErrorDialog({
+        visible: true,
+        message: 'Please enter a price or select "Requires Quotation"'
+      });
       return;
     }
 
@@ -619,18 +711,24 @@ export default function AdminScreen() {
 
       const newServiceItem = await apiService.addService(serviceData);
       setServices([...services, newServiceItem]);
-      setNewService({ 
-        name: '', 
-        description: '', 
-        price: '', 
-        duration: '', 
+      setNewService({
+        name: '',
+        description: '',
+        price: '',
+        duration: '',
         category: '',
-        requiresQuotation: false 
+        requiresQuotation: false
       });
       setModalVisible(false);
-      Alert.alert('Success', 'Service added successfully');
+      setSuccessDialog({
+        visible: true,
+        message: 'Service added successfully'
+      });
     } catch (error) {
-      Alert.alert('Error', 'Failed to add service.');
+      setErrorDialog({
+        visible: true,
+        message: 'Failed to add service.'
+      });
       console.error('Error adding service:', error);
     }
   };
@@ -652,14 +750,19 @@ export default function AdminScreen() {
   };
 
   const handleUpdateService = async () => {
-    // Add null check for editingService
     if (!editingService || !editingService.name || !editingService.duration || !editingService.category) {
-      Alert.alert('Error', 'Please fill all required fields');
+      setErrorDialog({
+        visible: true,
+        message: 'Please fill all required fields'
+      });
       return;
     }
 
     if (!editingService.requiresQuotation && !editingService.price) {
-      Alert.alert('Error', 'Please enter a price or select "Requires Quotation"');
+      setErrorDialog({
+        visible: true,
+        message: 'Please enter a price or select "Requires Quotation"'
+      });
       return;
     }
 
@@ -673,45 +776,53 @@ export default function AdminScreen() {
       };
 
       const updatedService = await apiService.updateService(editingService.id, serviceData);
-      
-      // Update local state
-      const updatedServices = services.map(service => 
+
+      const updatedServices = services.map(service =>
         service.id === editingService.id ? updatedService : service
       );
       setServices(updatedServices);
-      
+
       setEditingService(null);
       setModalVisible(false);
-      Alert.alert('Success', 'Service updated successfully');
+      setSuccessDialog({
+        visible: true,
+        message: 'Service updated successfully'
+      });
     } catch (error) {
-      Alert.alert('Error', 'Failed to update service.');
+      setErrorDialog({
+        visible: true,
+        message: 'Failed to update service.'
+      });
       console.error('Error updating service:', error);
     }
   };
 
   const handleDeleteService = async (serviceId) => {
-    Alert.alert(
-      'Delete Service',
-      'Are you sure you want to delete this service?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiService.deleteService(serviceId);
-              const updatedServices = services.filter(service => service.id !== serviceId);
-              setServices(updatedServices);
-              Alert.alert('Success', 'Service deleted successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete service.');
-              console.error('Error deleting service:', error);
-            }
-          }
-        },
-      ]
-    );
+    setConfirmDialog({
+      visible: true,
+      title: 'Delete Service',
+      message: 'Are you sure you want to delete this service?',
+      confirmText: 'Delete',
+      confirmColor: '#EF4444',
+      onConfirm: async () => {
+        setConfirmDialog({ ...confirmDialog, visible: false });
+        try {
+          await apiService.deleteService(serviceId);
+          const updatedServices = services.filter(service => service.id !== serviceId);
+          setServices(updatedServices);
+          setSuccessDialog({
+            visible: true,
+            message: 'Service deleted successfully'
+          });
+        } catch (error) {
+          setErrorDialog({
+            visible: true,
+            message: 'Failed to delete service.'
+          });
+          console.error('Error deleting service:', error);
+        }
+      }
+    });
   };
 
   const handleViewCustomers = () => {
@@ -751,8 +862,8 @@ export default function AdminScreen() {
     }
   };
 
-  const filteredBookings = filterStatus === 'all' 
-    ? bookings 
+  const filteredBookings = filterStatus === 'all'
+    ? bookings
     : bookings.filter(booking => booking.status === filterStatus);
 
   const todaysBookings = bookings.filter(booking => {
@@ -769,17 +880,17 @@ export default function AdminScreen() {
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Service Management</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.iconButton}
           onPress={() => {
             setActiveModal('add_service');
-            setNewService({ 
-              name: '', 
-              description: '', 
-              price: '', 
-              duration: '', 
+            setNewService({
+              name: '',
+              description: '',
+              price: '',
+              duration: '',
               category: '',
-              requiresQuotation: false 
+              requiresQuotation: false
             });
             setModalVisible(true);
           }}
@@ -787,7 +898,7 @@ export default function AdminScreen() {
           <Plus size={20} color="#059669" />
         </TouchableOpacity>
       </View>
-      
+
       {services.map(service => (
         <View key={service.id} style={styles.serviceItem}>
           <View style={styles.serviceInfo}>
@@ -802,13 +913,13 @@ export default function AdminScreen() {
             )}
           </View>
           <View style={styles.serviceActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.iconButton}
               onPress={() => handleEditService(service)}
             >
               <Edit3 size={16} color="#3B82F6" />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.iconButton}
               onPress={() => handleDeleteService(service.id)}
             >
@@ -832,33 +943,33 @@ export default function AdminScreen() {
             <Text style={styles.quotationText}>Price to be quoted</Text>
           )}
         </View>
-        
+
         <View style={styles.bookingStatus}>
           {getStatusIcon(booking.status)}
           <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
-            {booking.status.split('_').map(word => 
+            {booking.status.split('_').map(word =>
               word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' ')}
           </Text>
         </View>
       </View>
-      
+
       <View style={styles.bookingDetails}>
         <View style={styles.detailRow}>
           <Clock size={16} color="#6B7280" />
           <Text style={styles.detailText}>{booking.scheduled_time} on {booking.scheduled_date}</Text>
         </View>
-        
+
         <View style={styles.detailRow}>
           <MapPin size={16} color="#6B7280" />
           <Text style={styles.detailText}>{booking.address}</Text>
         </View>
-        
+
         <View style={styles.detailRow}>
           <Phone size={16} color="#6B7280" />
           <Text style={styles.detailText}>{booking.client_phone}</Text>
         </View>
-        
+
         {booking.special_instructions && (
           <View style={styles.detailRow}>
             <ClipboardList size={16} color="#6B7280" />
@@ -868,7 +979,7 @@ export default function AdminScreen() {
           </View>
         )}
       </View>
-      
+
       {booking.status === 'pending' && (
         <View style={styles.bookingActions}>
           <TouchableOpacity
@@ -877,7 +988,7 @@ export default function AdminScreen() {
           >
             <Text style={styles.actionBtnText}>Confirm</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: '#DC2626' }]}
             onPress={() => handleStatusUpdate(booking.id, 'cancelled')}
@@ -886,13 +997,13 @@ export default function AdminScreen() {
           </TouchableOpacity>
         </View>
       )}
-      
+
       {booking.status === 'confirmed' && (
         <TouchableOpacity
           style={[
-            styles.actionBtn, 
-            canMarkAsComplete(booking) 
-              ? { backgroundColor: '#6366F1' } 
+            styles.actionBtn,
+            canMarkAsComplete(booking)
+              ? { backgroundColor: '#6366F1' }
               : { backgroundColor: '#9CA3AF', opacity: 0.7 }
           ]}
           onPress={canMarkAsComplete(booking) ? () => handleStatusUpdate(booking.id, 'completed') : null}
@@ -904,7 +1015,6 @@ export default function AdminScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Delete Booking Button */}
       <TouchableOpacity
         style={[styles.actionBtn, { backgroundColor: '#EF4444', marginTop: 8 }]}
         onPress={() => handleDeleteBooking(booking.id)}
@@ -921,7 +1031,7 @@ export default function AdminScreen() {
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Service</Text>
-            
+
             <Text style={styles.inputLabel}>Service Name *</Text>
             <TextInput
               style={styles.input}
@@ -930,7 +1040,7 @@ export default function AdminScreen() {
               value={newService.name}
               onChangeText={text => setNewService({...newService, name: text})}
             />
-            
+
             <Text style={styles.inputLabel}>Description</Text>
             <TextInput
               style={styles.input}
@@ -939,13 +1049,13 @@ export default function AdminScreen() {
               value={newService.description}
               onChangeText={text => setNewService({...newService, description: text})}
             />
-            
+
             <View style={styles.settingItem}>
               <Text style={styles.settingLabel}>Requires Quotation</Text>
               <Switch
                 value={newService.requiresQuotation}
                 onValueChange={value => setNewService({
-                  ...newService, 
+                  ...newService,
                   requiresQuotation: value,
                   price: value ? '' : newService.price
                 })}
@@ -953,7 +1063,7 @@ export default function AdminScreen() {
                 thumbColor="white"
               />
             </View>
-            
+
             {!newService.requiresQuotation && (
               <>
                 <Text style={styles.inputLabel}>Price *</Text>
@@ -967,7 +1077,7 @@ export default function AdminScreen() {
                 />
               </>
             )}
-            
+
             <Text style={styles.inputLabel}>Duration (hours) *</Text>
             <TextInput
               style={styles.input}
@@ -977,7 +1087,7 @@ export default function AdminScreen() {
               value={newService.duration}
               onChangeText={text => setNewService({...newService, duration: text})}
             />
-            
+
             <Text style={styles.inputLabel}>Category *</Text>
             <TextInput
               style={styles.input}
@@ -986,15 +1096,15 @@ export default function AdminScreen() {
               value={newService.category}
               onChangeText={text => setNewService({...newService, category: text})}
             />
-            
+
             <View style={styles.modalActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={handleAddService}
               >
@@ -1003,12 +1113,12 @@ export default function AdminScreen() {
             </View>
           </View>
         );
-      
+
       case 'edit_service':
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Service</Text>
-            
+
             <Text style={styles.inputLabel}>Service Name *</Text>
             <TextInput
               style={styles.input}
@@ -1017,7 +1127,7 @@ export default function AdminScreen() {
               value={editingService?.name || ''}
               onChangeText={text => setEditingService({...editingService, name: text})}
             />
-            
+
             <Text style={styles.inputLabel}>Description</Text>
             <TextInput
               style={styles.input}
@@ -1026,13 +1136,13 @@ export default function AdminScreen() {
               value={editingService?.description || ''}
               onChangeText={text => setEditingService({...editingService, description: text})}
             />
-            
+
             <View style={styles.settingItem}>
               <Text style={styles.settingLabel}>Requires Quotation</Text>
               <Switch
                 value={editingService?.requiresQuotation || false}
                 onValueChange={value => setEditingService({
-                  ...editingService, 
+                  ...editingService,
                   requiresQuotation: value,
                   price: value ? '' : editingService.price
                 })}
@@ -1040,7 +1150,7 @@ export default function AdminScreen() {
                 thumbColor="white"
               />
             </View>
-            
+
             {!editingService?.requiresQuotation && (
               <>
                 <Text style={styles.inputLabel}>Price *</Text>
@@ -1054,7 +1164,7 @@ export default function AdminScreen() {
                 />
               </>
             )}
-            
+
             <Text style={styles.inputLabel}>Duration (hours) *</Text>
             <TextInput
               style={styles.input}
@@ -1064,7 +1174,7 @@ export default function AdminScreen() {
               value={editingService?.duration || ''}
               onChangeText={text => setEditingService({...editingService, duration: text})}
             />
-            
+
             <Text style={styles.inputLabel}>Category *</Text>
             <TextInput
               style={styles.input}
@@ -1073,9 +1183,9 @@ export default function AdminScreen() {
               value={editingService?.category || ''}
               onChangeText={text => setEditingService({...editingService, category: text})}
             />
-            
+
             <View style={styles.modalActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => {
                   setEditingService(null);
@@ -1084,7 +1194,7 @@ export default function AdminScreen() {
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={handleUpdateService}
               >
@@ -1093,13 +1203,13 @@ export default function AdminScreen() {
             </View>
           </View>
         );
-      
+
       case 'customers':
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>All Customers</Text>
             <Text style={styles.modalSubtitle}>Total: {customers.length} customers</Text>
-            
+
             <ScrollView style={styles.customersList}>
               {customers.map(customer => (
                 <View key={customer.id} style={styles.customerItem}>
@@ -1109,8 +1219,8 @@ export default function AdminScreen() {
                 </View>
               ))}
             </ScrollView>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton, { marginTop: 16 }]}
               onPress={() => setModalVisible(false)}
             >
@@ -1118,13 +1228,13 @@ export default function AdminScreen() {
             </TouchableOpacity>
           </View>
         );
-      
+
       case 'feedbacks':
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Customer Feedbacks</Text>
             <Text style={styles.modalSubtitle}>Total: {feedbacks.length} feedbacks</Text>
-            
+
             <ScrollView style={styles.feedbacksList}>
               {feedbacks.map(feedback => (
                 <View key={feedback.id} style={styles.feedbackItem}>
@@ -1142,7 +1252,7 @@ export default function AdminScreen() {
                   <Text style={styles.feedbackDate}>
                     {new Date(feedback.created_at).toLocaleDateString()}
                   </Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.deleteFeedbackButton}
                     onPress={() => handleDeleteFeedback(feedback.id)}
                   >
@@ -1152,8 +1262,8 @@ export default function AdminScreen() {
                 </View>
               ))}
             </ScrollView>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton, { marginTop: 16 }]}
               onPress={() => setModalVisible(false)}
             >
@@ -1161,7 +1271,7 @@ export default function AdminScreen() {
             </TouchableOpacity>
           </View>
         );
-      
+
       default:
         return (
           <View style={styles.modalContent}>
@@ -1176,20 +1286,20 @@ export default function AdminScreen() {
                 onPress={() => {
                   setFilterStatus(status);
                   setModalVisible(false);
-                  loadData(); // Reload data with new filter
+                  loadData();
                 }}
-              > 
+              >
                 <Text style={[
                   styles.filterOptionText,
                   filterStatus === status && styles.selectedFilterOptionText
                 ]}>
-                  {status.split('_').map(word => 
+                  {status.split('_').map(word =>
                     word.charAt(0).toUpperCase() + word.slice(1)
                   ).join(' ')}
                 </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton, { marginTop: 16 }]}
               onPress={() => setModalVisible(false)}
             >
@@ -1211,25 +1321,46 @@ export default function AdminScreen() {
 
   if (activeView === 'bookings') {
     return (
-      <MyBookingsView 
-        bookings={bookings} 
-        onBack={handleBackToDashboard}
-        onStatusUpdate={handleStatusUpdate}
-        onDeleteBooking={handleDeleteBooking}
-      />
+      <>
+        <MyBookingsView
+          bookings={bookings}
+          onBack={handleBackToDashboard}
+          onStatusUpdate={handleStatusUpdate}
+          onDeleteBooking={handleDeleteBooking}
+        />
+        <ConfirmDialog
+          visible={confirmDialog.visible}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog({ ...confirmDialog, visible: false })}
+          confirmText={confirmDialog.confirmText}
+          confirmColor={confirmDialog.confirmColor}
+        />
+        <SuccessDialog
+          visible={successDialog.visible}
+          message={successDialog.message}
+          onClose={() => setSuccessDialog({ visible: false, message: '' })}
+        />
+        <ErrorDialog
+          visible={errorDialog.visible}
+          message={errorDialog.message}
+          onClose={() => setErrorDialog({ visible: false, message: '' })}
+        />
+      </>
     );
   }
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      
+
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Admin Dashboard</Text>
           <Text style={styles.headerSubtitle}>Manage your cleaning business</Text>
         </View>
-        
+
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.iconButton}>
             <Settings size={20} color="white" />
@@ -1237,14 +1368,13 @@ export default function AdminScreen() {
         </View>
       </View>
 
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Stats Overview */}
         <View style={styles.statsContainer}>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
@@ -1252,19 +1382,19 @@ export default function AdminScreen() {
               <Text style={styles.statNumber}>{stats.totalBookings}</Text>
               <Text style={styles.statLabel}>Total Bookings</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <Users size={24} color="#059669" />
               <Text style={styles.statNumber}>{stats.totalCustomers}</Text>
               <Text style={styles.statLabel}>Customers</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <AlertCircle size={24} color="#059669" />
               <Text style={styles.statNumber}>{stats.pendingBookings}</Text>
               <Text style={styles.statLabel}>Pending</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <CheckCircle size={24} color="#059669" />
               <Text style={styles.statNumber}>{stats.completedBookings}</Text>
@@ -1273,20 +1403,19 @@ export default function AdminScreen() {
           </View>
         </View>
 
-        {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
-          
+
           <View style={styles.quickActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={handleViewCustomers}
             >
               <Users size={20} color="white" />
               <Text style={styles.actionButtonText}>View Customers</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={handleViewBookings}
             >
@@ -1294,7 +1423,7 @@ export default function AdminScreen() {
               <Text style={styles.actionButtonText}>Bookings</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={handleViewFeedbacks}
             >
@@ -1304,33 +1433,30 @@ export default function AdminScreen() {
           </View>
         </View>
 
-        {/* Customer Feedbacks */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Customer Feedbacks</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.iconButton}
               onPress={handleViewFeedbacks}
             >
               <ClipboardList size={20} color="#059669" />
             </TouchableOpacity>
           </View>
-          
+
           <Text style={styles.feedbackSummary}>
             {feedbacks.length} total feedbacks, {feedbacks.filter(f => f.rating >= 4).length} positive
           </Text>
         </View>
 
-        {/* Service Management */}
         {renderServiceManagement()}
 
-        {/* Today's Bookings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Today's Bookings</Text>
             <Text style={styles.bookingCount}>{todaysBookings.length} bookings</Text>
           </View>
-          
+
           {todaysBookings.length > 0 ? (
             todaysBookings.map(renderBookingCard)
           ) : (
@@ -1338,13 +1464,12 @@ export default function AdminScreen() {
           )}
         </View>
 
-        {/* Tomorrow's Bookings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Tomorrow's Bookings</Text>
             <Text style={styles.bookingCount}>{tomorrowsBookings.length} bookings</Text>
           </View>
-          
+
           {tomorrowsBookings.length > 0 ? (
             tomorrowsBookings.map(renderBookingCard)
           ) : (
@@ -1352,11 +1477,10 @@ export default function AdminScreen() {
           )}
         </View>
 
-        {/* All Bookings Filter */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>All Bookings</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.filterButton}
               onPress={() => {
                 setActiveModal('filter');
@@ -1365,13 +1489,13 @@ export default function AdminScreen() {
             >
               <Filter size={16} color="#059669" />
               <Text style={styles.filterText}>
-                Filter: {filterStatus.split('_').map(word => 
+                Filter: {filterStatus.split('_').map(word =>
                   word.charAt(0).toUpperCase() + word.slice(1)
                 ).join(' ')}
               </Text>
             </TouchableOpacity>
           </View>
-          
+
           {filteredBookings.length > 0 ? (
             filteredBookings.map(renderBookingCard)
           ) : (
@@ -1379,10 +1503,9 @@ export default function AdminScreen() {
           )}
         </View>
 
-        {/* Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
-          
+
           <View style={styles.settingItem}>
             <Text style={styles.settingLabel}>Push Notifications</Text>
             <Switch
@@ -1395,7 +1518,6 @@ export default function AdminScreen() {
         </View>
       </ScrollView>
 
-      {/* Modal for various actions */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -1408,6 +1530,28 @@ export default function AdminScreen() {
           </View>
         </View>
       </Modal>
+
+      <ConfirmDialog
+        visible={confirmDialog.visible}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, visible: false })}
+        confirmText={confirmDialog.confirmText}
+        confirmColor={confirmDialog.confirmColor}
+      />
+
+      <SuccessDialog
+        visible={successDialog.visible}
+        message={successDialog.message}
+        onClose={() => setSuccessDialog({ visible: false, message: '' })}
+      />
+
+      <ErrorDialog
+        visible={errorDialog.visible}
+        message={errorDialog.message}
+        onClose={() => setErrorDialog({ visible: false, message: '' })}
+      />
     </View>
   );
 }
@@ -1845,5 +1989,55 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
+  },
+  confirmOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  confirmDialog: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  confirmMessage: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  confirmButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmCancelButton: {
+    backgroundColor: '#E5E7EB',
+  },
+  confirmCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  confirmConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
   },
 });
