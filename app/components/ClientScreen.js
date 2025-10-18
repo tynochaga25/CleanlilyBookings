@@ -10,7 +10,8 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  Switch
+  Switch,
+  useWindowDimensions
 } from 'react-native';
 import { Star, MapPin, Phone, Clock, Shield, CheckCircle, Send, Eye, EyeOff } from 'lucide-react-native';
 import { createClient } from '@supabase/supabase-js';
@@ -29,6 +30,7 @@ const CleaningServiceHomepage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const { width, height } = useWindowDimensions();
 
   useEffect(() => {
     fetchServices();
@@ -177,7 +179,7 @@ const CleaningServiceHomepage = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { minHeight: height }]}>
         <ActivityIndicator size="large" color="#059669" />
         <Text style={styles.loadingText}>Loading services...</Text>
       </View>
@@ -185,7 +187,11 @@ const CleaningServiceHomepage = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={true}
+    >
       {/* Header with Logo */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
@@ -202,6 +208,7 @@ const CleaningServiceHomepage = () => {
         <Image
           source={{ uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}
           style={styles.heroImage}
+          resizeMode="cover"
         />
         <View style={styles.heroOverlay}>
           <Text style={styles.heroTitle}>Transform Your Space</Text>
@@ -219,6 +226,7 @@ const CleaningServiceHomepage = () => {
           renderItem={renderServiceItem}
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
+          style={styles.fullWidth}
         />
       </View>
 
@@ -321,6 +329,7 @@ const CleaningServiceHomepage = () => {
               renderItem={renderFeedbackItem}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
+              style={styles.fullWidth}
             />
           </>
         )}
@@ -363,12 +372,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+    width: '100%',
+  },
+  contentContainer: {
+    flexGrow: 1,
+    width: '100%',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F9FAFB',
+    width: '100%',
   },
   loadingText: {
     marginTop: 16,
@@ -379,6 +394,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     backgroundColor: '#FFFFFF',
+    width: '100%',
   },
   logoContainer: {
     flexDirection: 'row',
@@ -400,10 +416,12 @@ const styles = StyleSheet.create({
   tagline: {
     fontSize: 16,
     color: '#059669',
+    textAlign: 'center',
   },
   heroSection: {
     height: 300,
     position: 'relative',
+    width: '100%',
   },
   heroImage: {
     width: '100%',
@@ -416,26 +434,31 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'rgba(5, 150, 105, 0.8)',
     padding: 20,
+    width: '100%',
   },
   heroTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 8,
+    textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 16,
     color: '#FFFFFF',
+    textAlign: 'center',
   },
   section: {
     padding: 20,
     backgroundColor: '#FFFFFF',
     marginBottom: 1,
+    width: '100%',
   },
   sectionDark: {
     padding: 20,
     backgroundColor: '#059669',
     marginBottom: 1,
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 22,
@@ -464,6 +487,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     alignItems: 'center',
+    width: '100%',
   },
   serviceIcon: {
     width: 50,
@@ -518,6 +542,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginTop: 16,
+    width: '100%',
   },
   featureCard: {
     width: '48%',
@@ -526,6 +551,7 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     marginBottom: 16,
+    minHeight: 160,
   },
   featureTitle: {
     fontSize: 16,
@@ -546,6 +572,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
+    width: '100%',
   },
   feedbackLabel: {
     fontSize: 16,
@@ -557,6 +584,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 16,
     justifyContent: 'center',
+    width: '100%',
   },
   anonymousToggle: {
     flexDirection: 'row',
@@ -568,6 +596,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#D1D5DB',
+    width: '100%',
   },
   toggleLabel: {
     flexDirection: 'row',
@@ -587,6 +616,7 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
     marginBottom: 16,
+    width: '100%',
   },
   submitButton: {
     backgroundColor: '#059669',
@@ -596,6 +626,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     gap: 8,
+    width: '100%',
   },
   submitButtonText: {
     color: '#FFFFFF',
@@ -607,6 +638,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    width: '100%',
   },
   feedbackHeader: {
     flexDirection: 'row',
@@ -649,6 +681,7 @@ const styles = StyleSheet.create({
   contactSection: {
     padding: 20,
     backgroundColor: '#FFFFFF',
+    width: '100%',
   },
   contactTitle: {
     fontSize: 22,
@@ -665,12 +698,14 @@ const styles = StyleSheet.create({
   },
   contactMethods: {
     marginBottom: 24,
+    width: '100%',
   },
   contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+    width: '100%',
   },
   contactText: {
     marginLeft: 8,
@@ -681,6 +716,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 16,
+    width: '100%',
   },
   hoursTitle: {
     fontSize: 18,
@@ -699,10 +735,14 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#059669',
     alignItems: 'center',
+    width: '100%',
   },
   footerText: {
     color: '#FFFFFF',
     fontSize: 14,
+  },
+  fullWidth: {
+    width: '100%',
   },
 });
 
