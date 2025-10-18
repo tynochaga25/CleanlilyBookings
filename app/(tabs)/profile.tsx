@@ -40,7 +40,7 @@ import {
   Heart,
   Plus
 } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -75,6 +75,7 @@ interface Booking {
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,10 +123,13 @@ export default function ProfileScreen() {
       setLoading(true);
      
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('Current user:', user);
+      console.log('User error:', userError);
      
       if (!user) {
-        router.replace('./(auth)');
+        console.log('No user found, redirecting to auth');
+        router.replace('/(auth)');
         return;
       }
 
@@ -135,6 +139,9 @@ export default function ProfileScreen() {
         .select('*')
         .eq('id', user.id)
         .single();
+
+      console.log('Profile data:', profileData);
+      console.log('Profile error:', profileError);
 
       if (profileError) throw profileError;
       setProfile(profileData);
@@ -149,6 +156,9 @@ export default function ProfileScreen() {
         .eq('client_id', user.id)
         .order('scheduled_date', { ascending: false })
         .order('scheduled_time', { ascending: false });
+
+      console.log('Bookings data:', bookingsData);
+      console.log('Bookings error:', bookingsError);
 
       if (bookingsError) throw bookingsError;
      
@@ -213,6 +223,8 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
+    console.log('Logout button pressed');
+    
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -222,12 +234,64 @@ export default function ProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            await supabase.auth.signOut();
-            router.replace('../index');
+            try {
+              console.log('Starting logout process...');
+              
+              // First check current session
+              const { data: sessionData } = await supabase.auth.getSession();
+              console.log('Current session before logout:', sessionData);
+              
+              // Perform logout
+              const { error } = await supabase.auth.signOut();
+              
+              if (error) {
+                console.error('Supabase logout error:', error);
+                throw error;
+              }
+              
+              console.log('Logout successful, checking session after logout...');
+              
+              // Verify session is cleared
+              const { data: sessionAfterLogout } = await supabase.auth.getSession();
+              console.log('Session after logout:', sessionAfterLogout);
+              
+              // Navigate to home screen
+              console.log('Navigating to home screen...');
+              router.replace('../(tabs)/home')
+              
+            } catch (error) {
+              console.error('Error during logout:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
           },
         },
       ]
     );
+  };
+
+  // Alternative logout function - try this if the above doesn't work
+  const handleLogoutAlternative = async () => {
+    try {
+      console.log('Alternative logout method');
+      
+      // Clear Supabase session
+      await supabase.auth.signOut();
+      
+      // Clear any local storage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('supabase.auth.token');
+      }
+      
+      // Force navigation to home
+      setTimeout(() => {
+        router.replace('/');
+      }, 100);
+      
+    } catch (error) {
+      console.error('Alternative logout error:', error);
+      // Even if there's an error, try to navigate to home
+      router.replace('/');
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -451,7 +515,7 @@ export default function ProfileScreen() {
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickAction}
-            onPress={() => router.push('/')} // Redirects to index.tsx
+            onPress={() => router.push('/')}
           >
             <View style={[styles.quickActionIcon, {backgroundColor: '#F0FDF4'}]}>
               <Plus size={20} color="#059669" />
@@ -587,7 +651,7 @@ export default function ProfileScreen() {
                 <Text style={styles.emptyStateText}>Schedule your first cleaning service</Text>
                 <TouchableOpacity
                   style={styles.bookNowButton}
-                  onPress={() => router.push('/')} // Redirects to index.tsx
+                  onPress={() => router.push('/')}
                 >
                   <Text style={styles.bookNowText}>Book a Service</Text>
                 </TouchableOpacity>
@@ -702,7 +766,10 @@ export default function ProfileScreen() {
             transform: [{ translateY: slideAnim }]
           }}
         >
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <TouchableOpacity 
+            style={styles.logoutButton} 
+            onPress={handleLogoutAlternative}
+          >
             <LogOut size={20} color="#DC2626" />
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
