@@ -10,6 +10,7 @@ import {
   Alert,
   useWindowDimensions,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../lib/supabase";
@@ -55,6 +56,7 @@ const showConfirmation = (title, message, onConfirm) => {
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("all");
   const [userId, setUserId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -62,8 +64,9 @@ const MyBookings = () => {
   
   // Responsive breakpoints
   const isSmallScreen = width < 768;
-  const isLargeScreen = width > 1024;
-  const isExtraLargeScreen = width > 1440;
+  const isMediumScreen = width >= 768 && width < 1024;
+  const isLargeScreen = width >= 1024;
+  const isExtraLargeScreen = width >= 1440;
 
   useEffect(() => {
     getCurrentUser();
@@ -124,7 +127,13 @@ const MyBookings = () => {
       showAlert("Error", "Failed to load bookings");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchBookings();
   };
 
   const handleCancelBooking = async (bookingId) => {
@@ -348,144 +357,180 @@ const MyBookings = () => {
   }
 
   return (
-    <ScrollView 
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollViewContent}
-      showsVerticalScrollIndicator={true}
-    >
-      <LinearGradient 
-        colors={["#f0fdf4", "#ecfdf5", "#d1fae5"]} 
-        style={styles.gradient}
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={Platform.OS === 'web'}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#10b981"]}
+            tintColor="#10b981"
+          />
+        }
+        // Web-specific scroll behavior
+        {...(Platform.OS === 'web' && {
+          style: { height: '100vh' },
+          contentContainerStyle: { minHeight: '100%' }
+        })}
       >
-        <View style={styles.mainContainer}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <Image source={logo} style={styles.logo} />
-              <View style={styles.headerText}>
-                <Text style={styles.headerTitle}>My Bookings</Text>
-                <Text style={styles.headerSubtitle}>
-                  Manage your cleaning appointments in one place
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.headerStats}>
-              <Text style={styles.bookingCount}>
-                {filteredBookings.length} {filter === 'all' ? 'total' : filter} 
-                {filteredBookings.length === 1 ? ' booking' : ' bookings'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Filter Tabs */}
-          <View style={styles.filterContainer}>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterScrollContent}
-            >
-              {[
-                { key: "all", label: "All Bookings", icon: "📋" },
-                { key: "pending", label: "Pending", icon: "⏳" },
-                { key: "confirmed", label: "Confirmed", icon: "✅" },
-                { key: "completed", label: "Completed", icon: "🎉" },
-                { key: "cancelled", label: "Cancelled", icon: "❌" }
-              ].map((item) => (
-                <TouchableOpacity
-                  key={item.key}
-                  style={[
-                    styles.filterTab,
-                    filter === item.key && styles.filterTabActive,
-                  ]}
-                  onPress={() => setFilter(item.key)}
-                >
-                  <Text style={styles.filterIcon}>{item.icon}</Text>
-                  <Text style={[
-                    styles.filterLabel,
-                    filter === item.key && styles.filterLabelActive,
-                  ]}>
-                    {item.label}
+        <LinearGradient 
+          colors={["#f0fdf4", "#ecfdf5", "#d1fae5"]} 
+          style={styles.gradient}
+        >
+          <View style={styles.mainContainer}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <Image source={logo} style={styles.logo} />
+                <View style={styles.headerText}>
+                  <Text style={styles.headerTitle}>My Bookings</Text>
+                  <Text style={styles.headerSubtitle}>
+                    Manage your cleaning appointments in one place
                   </Text>
-                  {filter === item.key && (
-                    <View style={styles.activeIndicator} />
+                </View>
+              </View>
+              
+              <View style={styles.headerStats}>
+                <Text style={styles.bookingCount}>
+                  {filteredBookings.length} {filter === 'all' ? 'total' : filter} 
+                  {filteredBookings.length === 1 ? ' booking' : ' bookings'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Filter Tabs */}
+            <View style={styles.filterContainer}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={Platform.OS === 'web'}
+                contentContainerStyle={styles.filterScrollContent}
+              >
+                {[
+                  { key: "all", label: "All Bookings", icon: "📋" },
+                  { key: "pending", label: "Pending", icon: "⏳" },
+                  { key: "confirmed", label: "Confirmed", icon: "✅" },
+                  { key: "completed", label: "Completed", icon: "🎉" },
+                  { key: "cancelled", label: "Cancelled", icon: "❌" }
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[
+                      styles.filterTab,
+                      filter === item.key && styles.filterTabActive,
+                    ]}
+                    onPress={() => setFilter(item.key)}
+                  >
+                    <Text style={styles.filterIcon}>{item.icon}</Text>
+                    <Text style={[
+                      styles.filterLabel,
+                      filter === item.key && styles.filterLabelActive,
+                    ]}>
+                      {item.label}
+                    </Text>
+                    {filter === item.key && (
+                      <View style={styles.activeIndicator} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Content Area */}
+            <View style={styles.contentArea}>
+              {/* Desktop Table Header */}
+              {!isSmallScreen && filteredBookings.length > 0 && (
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.columnHeader, styles.serviceColumn]}>SERVICE</Text>
+                  <Text style={[styles.columnHeader, styles.datetimeColumn]}>DATE & TIME</Text>
+                  <Text style={[styles.columnHeader, styles.priceColumn]}>PRICE</Text>
+                  <Text style={[styles.columnHeader, styles.statusColumn]}>STATUS</Text>
+                  <Text style={[styles.columnHeader, styles.actionColumn]}>ACTION</Text>
+                </View>
+              )}
+
+              {/* Bookings List */}
+              {filteredBookings.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateIcon}>📅</Text>
+                  <Text style={styles.emptyStateTitle}>
+                    {filter === 'all' ? 'No bookings yet' : `No ${filter} bookings`}
+                  </Text>
+                  <Text style={styles.emptyStateText}>
+                    {filter === 'all' 
+                      ? "When you book a cleaning service, it will appear here." 
+                      : `You don't have any ${filter} bookings at the moment.`}
+                  </Text>
+                  {filter !== 'all' && (
+                    <TouchableOpacity 
+                      style={styles.viewAllButton}
+                      onPress={() => setFilter('all')}
+                    >
+                      <Text style={styles.viewAllButtonText}>View All Bookings</Text>
+                    </TouchableOpacity>
                   )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+                </View>
+              ) : (
+                <View style={styles.bookingsList}>
+                  {filteredBookings.map((item) => renderBookingItem(item))}
+                </View>
+              )}
+            </View>
 
-          {/* Content Area */}
-          <View style={styles.contentArea}>
-            {/* Desktop Table Header */}
-            {!isSmallScreen && filteredBookings.length > 0 && (
-              <View style={styles.tableHeader}>
-                <Text style={[styles.columnHeader, styles.serviceColumn]}>SERVICE</Text>
-                <Text style={[styles.columnHeader, styles.datetimeColumn]}>DATE & TIME</Text>
-                <Text style={[styles.columnHeader, styles.priceColumn]}>PRICE</Text>
-                <Text style={[styles.columnHeader, styles.statusColumn]}>STATUS</Text>
-                <Text style={[styles.columnHeader, styles.actionColumn]}>ACTION</Text>
-              </View>
-            )}
-
-            {/* Bookings List */}
-            {filteredBookings.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateIcon}>📅</Text>
-                <Text style={styles.emptyStateTitle}>
-                  {filter === 'all' ? 'No bookings yet' : `No ${filter} bookings`}
-                </Text>
-                <Text style={styles.emptyStateText}>
-                  {filter === 'all' 
-                    ? "When you book a cleaning service, it will appear here." 
-                    : `You don't have any ${filter} bookings at the moment.`}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.bookingsList}>
-                {filteredBookings.map((item) => renderBookingItem(item))}
-              </View>
-            )}
+            {/* Footer Spacer for better scrolling */}
+            <View style={styles.footerSpacer} />
           </View>
-        </View>
-      </LinearGradient>
-    </ScrollView>
+        </LinearGradient>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    minHeight: Platform.OS === 'web' ? '100vh' : '100%',
+    backgroundColor: '#f0fdf4',
+  },
   scrollView: {
     flex: 1,
-    backgroundColor: '#f0fdf4',
   },
   scrollViewContent: {
     flexGrow: 1,
-    minHeight: '100%',
+    minHeight: Platform.OS === 'web' ? '100vh' : '100%',
   },
   gradient: {
     flex: 1,
-    minHeight: '100%',
+    minHeight: Platform.OS === 'web' ? '100vh' : '100%',
   },
   mainContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    minHeight: '100%',
+    paddingHorizontal: Math.max(16, Platform.OS === 'web' ? 24 : 16),
+    paddingVertical: Platform.OS === 'web' ? 32 : 20,
+    minHeight: Platform.OS === 'web' ? '100vh' : '100%',
+    maxWidth: Platform.OS === 'web' ? 1400 : '100%',
+    alignSelf: 'center',
     width: '100%',
   },
   contentArea: {
     width: '100%',
     minHeight: 400,
+    flex: 1,
   },
   bookingsList: {
     width: '100%',
+  },
+  footerSpacer: {
+    height: Platform.OS === 'web' ? 100 : 50,
   },
   loadingContainer: { 
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center", 
     backgroundColor: '#f0fdf4',
-    minHeight: '100vh',
+    minHeight: Platform.OS === 'web' ? '100vh' : '100%',
   },
   loadingText: {
     marginTop: 16,
@@ -498,7 +543,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: 20,
-    padding: 24,
+    padding: Platform.OS === 'web' ? 32 : 24,
     marginBottom: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -506,42 +551,48 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     width: '100%',
+    ...(Platform.OS === 'web' && {
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+    }),
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    alignItems: Platform.OS === 'web' ? 'center' : 'flex-start',
+    marginBottom: Platform.OS === 'web' ? 0 : 16,
   },
   headerText: {
-    marginLeft: 16,
+    marginLeft: Platform.OS === 'web' ? 24 : 0,
+    marginTop: Platform.OS === 'web' ? 0 : 16,
     flex: 1,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: Platform.OS === 'web' ? 40 : 32,
     fontWeight: "bold",
     color: "#065f46",
-    marginBottom: 4,
+    marginBottom: 8,
   },
   headerSubtitle: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 18 : 16,
     color: "#6b7280",
-    lineHeight: 22,
+    lineHeight: 24,
   },
   headerStats: {
-    alignItems: 'center',
+    alignItems: Platform.OS === 'web' ? 'flex-end' : 'center',
+    marginTop: Platform.OS === 'web' ? 0 : 16,
   },
   bookingCount: {
     backgroundColor: "#10b981",
     color: "white",
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 16 : 14,
     fontWeight: "600",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 20,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: Platform.OS === 'web' ? 80 : 60,
+    height: Platform.OS === 'web' ? 80 : 60,
     resizeMode: "contain",
   },
 
@@ -552,21 +603,30 @@ const styles = StyleSheet.create({
   },
   filterScrollContent: {
     paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   filterTab: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: "#fff",
     borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: Platform.OS === 'web' ? 16 : 12,
+    paddingHorizontal: Platform.OS === 'web' ? 24 : 20,
     marginHorizontal: 6,
-    minWidth: 120,
+    minWidth: Platform.OS === 'web' ? 140 : 120,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    transition: 'all 0.2s ease-in-out',
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      ':hover': {
+        transform: [{ scale: 1.02 }],
+        shadowOpacity: 0.1,
+      },
+    }),
   },
   filterTabActive: {
     backgroundColor: "#065f46",
@@ -574,11 +634,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
   },
   filterIcon: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 18 : 16,
     marginRight: 8,
   },
   filterLabel: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     fontWeight: "600",
     color: "#6b7280",
   },
@@ -598,14 +658,14 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#065f46",
-    paddingVertical: 16,
+    paddingVertical: Platform.OS === 'web' ? 20 : 16,
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 8,
     width: '100%',
   },
   columnHeader: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     fontWeight: "700",
     color: "#fff",
     letterSpacing: 0.5,
@@ -630,6 +690,14 @@ const styles = StyleSheet.create({
     elevation: 4,
     width: '100%',
     maxWidth: '100%',
+    ...(Platform.OS === 'web' && {
+      transition: 'all 0.2s ease-in-out',
+      ':hover': {
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 6,
+      },
+    }),
   },
   mobileCardHeader: {
     flexDirection: "row",
@@ -690,11 +758,20 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
     width: '100%',
+    ...(Platform.OS === 'web' && {
+      transition: 'all 0.2s ease-in-out',
+      ':hover': {
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 4,
+        transform: [{ translateY: -1 }],
+      },
+    }),
   },
   desktopCardContent: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: Platform.OS === 'web' ? 24 : 20,
     paddingHorizontal: 20,
     width: '100%',
   },
@@ -702,13 +779,13 @@ const styles = StyleSheet.create({
     flex: 3,
   },
   desktopServiceName: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 17 : 16,
     fontWeight: "600",
     color: "#111827",
     marginBottom: 4,
   },
   desktopServiceDetails: {
-    fontSize: 13,
+    fontSize: Platform.OS === 'web' ? 14 : 13,
     color: "#6b7280",
   },
   datetimeSection: {
@@ -716,13 +793,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateText: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     fontWeight: "500",
     color: "#111827",
     marginBottom: 2,
   },
   timeText: {
-    fontSize: 13,
+    fontSize: Platform.OS === 'web' ? 14 : 13,
     color: "#6b7280",
   },
   priceSection: {
@@ -730,7 +807,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priceText: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 18 : 16,
     fontWeight: "bold",
     color: "#059669",
   },
@@ -739,12 +816,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusBadge: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'web' ? 8 : 6,
+    paddingHorizontal: Platform.OS === 'web' ? 16 : 12,
     borderRadius: 12,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: Platform.OS === 'web' ? 13 : 12,
     fontWeight: "700",
     textAlign: "center",
   },
@@ -756,14 +833,22 @@ const styles = StyleSheet.create({
   // Buttons
   cancelButton: {
     backgroundColor: "#f59e0b",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: Platform.OS === 'web' ? 12 : 10,
+    paddingHorizontal: Platform.OS === 'web' ? 24 : 20,
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'all 0.2s ease-in-out',
+      ':hover': {
+        backgroundColor: "#e6900b",
+        transform: [{ scale: 1.05 }],
+      },
+    }),
   },
   cancelButtonDisabled: {
     backgroundColor: "#9ca3af",
@@ -771,12 +856,12 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: "white",
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     fontWeight: "600",
   },
   noActionText: {
     color: "#9ca3af",
-    fontSize: 12,
+    fontSize: Platform.OS === 'web' ? 13 : 12,
     fontStyle: "italic",
   },
 
@@ -784,7 +869,7 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 80,
+    paddingVertical: Platform.OS === 'web' ? 120 : 80,
     paddingHorizontal: 20,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderRadius: 20,
@@ -793,22 +878,35 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   emptyStateIcon: {
-    fontSize: 64,
-    marginBottom: 20,
+    fontSize: Platform.OS === 'web' ? 80 : 64,
+    marginBottom: 24,
   },
   emptyStateTitle: {
-    fontSize: 22,
+    fontSize: Platform.OS === 'web' ? 26 : 22,
     fontWeight: "600",
     color: "#374151",
     marginBottom: 12,
     textAlign: "center",
   },
   emptyStateText: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 18 : 16,
     color: "#6b7280",
     textAlign: "center",
     lineHeight: 24,
     maxWidth: 400,
+    marginBottom: Platform.OS === 'web' ? 24 : 0,
+  },
+  viewAllButton: {
+    backgroundColor: "#10b981",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    marginTop: 16,
+  },
+  viewAllButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
