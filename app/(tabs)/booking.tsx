@@ -10,17 +10,55 @@ import {
   Image,
   Alert,
   useWindowDimensions,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../lib/supabase";
 
 const logo = require("../cleanlily.png");
 
+// Web-compatible alert function
+const showAlert = (title, message) => {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${message}`)) {
+      return true;
+    }
+    return false;
+  } else {
+    Alert.alert(title, message);
+    return true;
+  }
+};
+
+const showConfirmation = (title, message, onConfirm) => {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${message}`)) {
+      onConfirm();
+    }
+  } else {
+    Alert.alert(
+      title,
+      message,
+      [
+        {
+          text: "No",
+          style: "cancel"
+        },
+        { 
+          text: "Yes", 
+          onPress: onConfirm
+        }
+      ]
+    );
+  }
+};
+
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [userId, setUserId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const { width, height } = useWindowDimensions();
   
   // Responsive breakpoints
@@ -44,6 +82,7 @@ const MyBookings = () => {
       setUserId(user?.id || null);
     } catch (error) {
       console.error("Error getting current user:", error);
+      showAlert("Error", "Failed to get user information");
     }
   };
 
@@ -83,45 +122,42 @@ const MyBookings = () => {
       setBookings(enrichedBookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
+      showAlert("Error", "Failed to load bookings");
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancelBooking = async (bookingId) => {
-    Alert.alert(
+    showConfirmation(
       "Confirm Cancellation",
       "Are you sure you want to cancel this booking?",
-      [
-        {
-          text: "No",
-          style: "cancel"
-        },
-        { 
-          text: "Yes", 
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from("bookings")
-                .update({ status: "cancelled" })
-                .eq("id", bookingId);
-              
-              if (error) throw error;
-              
-              setBookings(bookings.map(booking => 
-                booking.id === bookingId 
-                  ? { ...booking, status: "cancelled" } 
-                  : booking
-              ));
-              
-              Alert.alert("Success", "Booking cancelled successfully");
-            } catch (error) {
-              console.error("Error cancelling booking:", error);
-              Alert.alert("Error", "Failed to cancel booking");
-            }
-          }
+      async () => {
+        try {
+          setCancellingId(bookingId);
+          
+          const { error } = await supabase
+            .from("bookings")
+            .update({ status: "cancelled" })
+            .eq("id", bookingId);
+          
+          if (error) throw error;
+          
+          // Update local state
+          setBookings(bookings.map(booking => 
+            booking.id === bookingId 
+              ? { ...booking, status: "cancelled" } 
+              : booking
+          ));
+          
+          showAlert("Success", "Booking cancelled successfully");
+        } catch (error) {
+          console.error("Error cancelling booking:", error);
+          showAlert("Error", "Failed to cancel booking. Please try again.");
+        } finally {
+          setCancellingId(null);
         }
-      ]
+      }
     );
   };
 
@@ -186,10 +222,12 @@ const MyBookings = () => {
   };
 
   const canCancelBooking = (booking) => {
-    return booking.status === "pending" || booking.status === "confirmed";
+    return (booking.status === "pending" || booking.status === "confirmed") && cancellingId !== booking.id;
   };
 
   const renderBookingItem = ({ item }) => {
+    const isCancelling = cancellingId === item.id;
+
     if (isSmallScreen) {
       return (
         <View style={styles.mobileCard}>
@@ -229,10 +267,18 @@ const MyBookings = () => {
 
           {canCancelBooking(item) && (
             <TouchableOpacity
-              style={styles.cancelButton}
+              style={[
+                styles.cancelButton,
+                isCancelling && styles.cancelButtonDisabled
+              ]}
               onPress={() => handleCancelBooking(item.id)}
+              disabled={isCancelling}
             >
-              <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+              {isCancelling ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+              )}
             </TouchableOpacity>
           )}
         </View>
@@ -271,10 +317,18 @@ const MyBookings = () => {
           <View style={styles.actionSection}>
             {canCancelBooking(item) ? (
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={[
+                  styles.cancelButton,
+                  isCancelling && styles.cancelButtonDisabled
+                ]}
                 onPress={() => handleCancelBooking(item.id)}
+                disabled={isCancelling}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                {isCancelling ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                )}
               </TouchableOpacity>
             ) : (
               <Text style={styles.noActionText}>-</Text>
@@ -310,7 +364,7 @@ const MyBookings = () => {
           isLargeScreen && styles.containerLarge,
           isSmallScreen && styles.containerSmall
         ]}>
-          {/* Simplified Header */}
+          {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerContent}>
               <Image source={logo} style={styles.logo} />
@@ -330,7 +384,7 @@ const MyBookings = () => {
             </View>
           </View>
 
-          {/* Enhanced Filter Tabs */}
+          {/* Filter Tabs */}
           <View style={styles.filterContainer}>
             <ScrollView 
               horizontal 
@@ -713,6 +767,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  cancelButtonDisabled: {
+    backgroundColor: "#9ca3af",
+    opacity: 0.7,
   },
   cancelButtonText: {
     color: "white",
