@@ -10,8 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  Switch,
-  useWindowDimensions
+  Switch
 } from 'react-native';
 import { Star, MapPin, Phone, Clock, Shield, CheckCircle, Send, Eye, EyeOff } from 'lucide-react-native';
 import { createClient } from '@supabase/supabase-js';
@@ -30,7 +29,6 @@ const CleaningServiceHomepage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
-  const { width, height } = useWindowDimensions();
 
   useEffect(() => {
     fetchServices();
@@ -40,8 +38,6 @@ const CleaningServiceHomepage = () => {
 
   const fetchUserProfile = async () => {
     try {
-      // In a real app, you would get the current user's ID from authentication
-      // For demonstration, let's assume we have a logged-in user with ID
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
@@ -103,7 +99,6 @@ const CleaningServiceHomepage = () => {
         rating: rating,
       };
 
-      // Add client name if not anonymous and user profile exists
       if (!isAnonymous && userProfile) {
         feedbackData.client_name = userProfile.full_name;
       } else {
@@ -120,7 +115,7 @@ const CleaningServiceHomepage = () => {
       setFeedbackText('');
       setRating(5);
       setIsAnonymous(false);
-      fetchFeedbacks(); // Refresh the feedback list
+      fetchFeedbacks();
     } catch (error) {
       console.error('Feedback submission error:', error);
       Alert.alert('Error', 'Failed to submit feedback');
@@ -179,7 +174,7 @@ const CleaningServiceHomepage = () => {
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { minHeight: height }]}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#059669" />
         <Text style={styles.loadingText}>Loading services...</Text>
       </View>
@@ -187,194 +182,201 @@ const CleaningServiceHomepage = () => {
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={true}
-    >
-      {/* Header with Logo */}
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>Cleanlily Cleaners</Text>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoBadgeText}>®</Text>
+    <View style={styles.mainContainer}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
+      >
+        {/* Header with Logo */}
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>Cleanlily Cleaners</Text>
+            <View style={styles.logoBadge}>
+              <Text style={styles.logoBadgeText}>®</Text>
+            </View>
+          </View>
+          <Text style={styles.tagline}>Professional Cleaning Services</Text>
+        </View>
+
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <Image
+            source={{ uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}
+            style={styles.heroImage}
+          />
+          <View style={styles.heroOverlay}>
+            <Text style={styles.heroTitle}>Transform Your Space</Text>
+            <Text style={styles.heroSubtitle}>Professional cleaning services for homes and offices across Zimbabwe</Text>
           </View>
         </View>
-        <Text style={styles.tagline}>Professional Cleaning Services</Text>
-      </View>
 
-      {/* Hero Section */}
-      <View style={styles.heroSection}>
-        <Image
-          source={{ uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
-        <View style={styles.heroOverlay}>
-          <Text style={styles.heroTitle}>Transform Your Space</Text>
-          <Text style={styles.heroSubtitle}>Professional cleaning services for homes and offices across Zimbabwe</Text>
-        </View>
-      </View>
-
-      {/* Services Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Our Services</Text>
-        <Text style={styles.sectionSubtitle}>We offer a range of professional cleaning services to meet your needs</Text>
-        
-        <FlatList
-          data={services}
-          renderItem={renderServiceItem}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          style={styles.fullWidth}
-        />
-      </View>
-
-      {/* Why Choose Us Section */}
-      <View style={styles.sectionDark}>
-        <Text style={styles.sectionTitleLight}>Why Choose Cleanlily Cleaners?</Text>
-        
-        <View style={styles.featuresGrid}>
-          <View style={styles.featureCard}>
-            <Shield size={32} color="#FFFFFF" />
-            <Text style={styles.featureTitle}>Trusted Professionals</Text>
-            <Text style={styles.featureDescription}>All our cleaners are thoroughly vetted and trained</Text>
-          </View>
+        {/* Services Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Our Services</Text>
+          <Text style={styles.sectionSubtitle}>We offer a range of professional cleaning services to meet your needs</Text>
           
-          <View style={styles.featureCard}>
-            <CheckCircle size={32} color="#FFFFFF" />
-            <Text style={styles.featureTitle}>Quality Guaranteed</Text>
-            <Text style={styles.featureDescription}>We're not satisfied until you are</Text>
-          </View>
-          
-          <View style={styles.featureCard}>
-            <Clock size={32} color="#FFFFFF" />
-            <Text style={styles.featureTitle}>Flexible Scheduling</Text>
-            <Text style={styles.featureDescription}>Book at your convenience, 7 days a week</Text>
-          </View>
-          
-          <View style={styles.featureCard}>
-            <Star size={32} color="#FFFFFF" />
-            <Text style={styles.featureTitle}>Eco-Friendly Products</Text>
-            <Text style={styles.featureDescription}>We use environmentally safe cleaning solutions</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Feedback Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Share Your Experience</Text>
-        <Text style={styles.sectionSubtitle}>We value your feedback to improve our services</Text>
-        
-        <View style={styles.feedbackForm}>
-          <Text style={styles.feedbackLabel}>Your Rating</Text>
-          <View style={styles.ratingInput}>
-            {[...Array(5)].map((_, i) => (
-              <TouchableOpacity key={i} onPress={() => setRating(i + 1)}>
-                <Star
-                  size={28}
-                  color={i < rating ? '#F59E0B' : '#D1D5DB'}
-                  fill={i < rating ? '#F59E0B' : 'transparent'}
-                />
-              </TouchableOpacity>
+          <View style={styles.servicesList}>
+            {services.map((item) => (
+              <View key={item.id}>
+                {renderServiceItem({ item })}
+              </View>
             ))}
           </View>
+        </View>
+
+        {/* Why Choose Us Section */}
+        <View style={styles.sectionDark}>
+          <Text style={styles.sectionTitleLight}>Why Choose Cleanlily Cleaners?</Text>
           
-          <View style={styles.anonymousToggle}>
-            <View style={styles.toggleLabel}>
-              {isAnonymous ? <EyeOff size={20} color="#059669" /> : <Eye size={20} color="#059669" />}
-              <Text style={styles.toggleText}>
-                {isAnonymous ? 'Post as Anonymous' : `Post as ${userProfile ? userProfile.full_name : 'Your Name'}`}
-              </Text>
+          <View style={styles.featuresGrid}>
+            <View style={styles.featureCard}>
+              <Shield size={32} color="#FFFFFF" />
+              <Text style={styles.featureTitle}>Trusted Professionals</Text>
+              <Text style={styles.featureDescription}>All our cleaners are thoroughly vetted and trained</Text>
             </View>
-            <Switch
-              value={isAnonymous}
-              onValueChange={setIsAnonymous}
-              trackColor={{ false: '#D1D5DB', true: '#059669' }}
-              thumbColor={isAnonymous ? '#FFFFFF' : '#FFFFFF'}
+            
+            <View style={styles.featureCard}>
+              <CheckCircle size={32} color="#FFFFFF" />
+              <Text style={styles.featureTitle}>Quality Guaranteed</Text>
+              <Text style={styles.featureDescription}>We're not satisfied until you are</Text>
+            </View>
+            
+            <View style={styles.featureCard}>
+              <Clock size={32} color="#FFFFFF" />
+              <Text style={styles.featureTitle}>Flexible Scheduling</Text>
+              <Text style={styles.featureDescription}>Book at your convenience, 7 days a week</Text>
+            </View>
+            
+            <View style={styles.featureCard}>
+              <Star size={32} color="#FFFFFF" />
+              <Text style={styles.featureTitle}>Eco-Friendly Products</Text>
+              <Text style={styles.featureDescription}>We use environmentally safe cleaning solutions</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Feedback Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Share Your Experience</Text>
+          <Text style={styles.sectionSubtitle}>We value your feedback to improve our services</Text>
+          
+          <View style={styles.feedbackForm}>
+            <Text style={styles.feedbackLabel}>Your Rating</Text>
+            <View style={styles.ratingInput}>
+              {[...Array(5)].map((_, i) => (
+                <TouchableOpacity key={i} onPress={() => setRating(i + 1)}>
+                  <Star
+                    size={28}
+                    color={i < rating ? '#F59E0B' : '#D1D5DB'}
+                    fill={i < rating ? '#F59E0B' : 'transparent'}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            <View style={styles.anonymousToggle}>
+              <View style={styles.toggleLabel}>
+                {isAnonymous ? <EyeOff size={20} color="#059669" /> : <Eye size={20} color="#059669" />}
+                <Text style={styles.toggleText}>
+                  {isAnonymous ? 'Post as Anonymous' : `Post as ${userProfile ? userProfile.full_name : 'Your Name'}`}
+                </Text>
+              </View>
+              <Switch
+                value={isAnonymous}
+                onValueChange={setIsAnonymous}
+                trackColor={{ false: '#D1D5DB', true: '#059669' }}
+                thumbColor={isAnonymous ? '#FFFFFF' : '#FFFFFF'}
+              />
+            </View>
+            
+            <Text style={styles.feedbackLabel}>Your Feedback</Text>
+            <TextInput
+              style={styles.feedbackInput}
+              value={feedbackText}
+              onChangeText={setFeedbackText}
+              placeholder="Share your experience with our service..."
+              multiline
+              numberOfLines={4}
             />
+            
+            <TouchableOpacity 
+              style={styles.submitButton}
+              onPress={submitFeedback}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Send size={18} color="#FFFFFF" />
+                  <Text style={styles.submitButtonText}>Submit Feedback</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
-          
-          <Text style={styles.feedbackLabel}>Your Feedback</Text>
-          <TextInput
-            style={styles.feedbackInput}
-            value={feedbackText}
-            onChangeText={setFeedbackText}
-            placeholder="Share your experience with our service..."
-            multiline
-            numberOfLines={4}
-          />
-          
-          <TouchableOpacity 
-            style={styles.submitButton}
-            onPress={submitFeedback}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <>
-                <Send size={18} color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>Submit Feedback</Text>
-              </>
-            )}
-          </TouchableOpacity>
+
+          {feedbacks.length > 0 && (
+            <>
+              <Text style={styles.sectionSubtitle}>Recent Feedback from Our Clients</Text>
+              <View style={styles.feedbacksList}>
+                {feedbacks.map((item) => (
+                  <View key={item.id}>
+                    {renderFeedbackItem({ item })}
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
         </View>
 
-        {feedbacks.length > 0 && (
-          <>
-            <Text style={styles.sectionSubtitle}>Recent Feedback from Our Clients</Text>
-            <FlatList
-              data={feedbacks}
-              renderItem={renderFeedbackItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              style={styles.fullWidth}
-            />
-          </>
-        )}
-      </View>
-
-      {/* Contact Section */}
-      <View style={styles.contactSection}>
-        <Text style={styles.contactTitle}>Ready to Get Started?</Text>
-        <Text style={styles.contactSubtitle}>Contact us today to schedule your cleaning service</Text>
-        
-        <View style={styles.contactMethods}>
-          <View style={styles.contactItem}>
-            <Phone size={20} color="#059669" />
-            <Text style={styles.contactText}>+263242 332317/75</Text>
+        {/* Contact Section */}
+        <View style={styles.contactSection}>
+          <Text style={styles.contactTitle}>Ready to Get Started?</Text>
+          <Text style={styles.contactSubtitle}>Contact us today to schedule your cleaning service</Text>
+          
+          <View style={styles.contactMethods}>
+            <View style={styles.contactItem}>
+              <Phone size={20} color="#059669" />
+              <Text style={styles.contactText}>+263242 332317/75</Text>
+            </View>
+            
+            <View style={styles.contactItem}>
+              <MapPin size={20} color="#059669" />
+              <Text style={styles.contactText}>Harare, Zimbabwe</Text>
+            </View>
           </View>
           
-          <View style={styles.contactItem}>
-            <MapPin size={20} color="#059669" />
-            <Text style={styles.contactText}>Harare, Zimbabwe</Text>
+          <View style={styles.hoursInfo}>
+            <Text style={styles.hoursTitle}>Business Hours</Text>
+            <Text style={styles.hoursText}>Monday - Friday: 8:00 AM - 6:00 PM</Text>
+            <Text style={styles.hoursText}>Saturday: 9:00 AM - 4:00 PM</Text>
+            <Text style={styles.hoursText}>Sunday: Closed</Text>
           </View>
         </View>
-        
-        <View style={styles.hoursInfo}>
-          <Text style={styles.hoursTitle}>Business Hours</Text>
-          <Text style={styles.hoursText}>Monday - Friday: 8:00 AM - 6:00 PM</Text>
-          <Text style={styles.hoursText}>Saturday: 9:00 AM - 4:00 PM</Text>
-          <Text style={styles.hoursText}>Sunday: Closed</Text>
-        </View>
-      </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>© 2025 Cleanlily Cleaners. All rights reserved.</Text>
-      </View>
-    </ScrollView>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>© 2025 Cleanlily Cleaners. All rights reserved.</Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
+    minHeight: '100vh',
+    width: '100%',
     backgroundColor: '#F9FAFB',
+  },
+  scrollView: {
+    flex: 1,
     width: '100%',
   },
-  contentContainer: {
+  scrollContent: {
     flexGrow: 1,
     width: '100%',
   },
@@ -383,7 +385,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F9FAFB',
-    width: '100%',
+    minHeight: '100vh',
   },
   loadingText: {
     marginTop: 16,
@@ -416,7 +418,6 @@ const styles = StyleSheet.create({
   tagline: {
     fontSize: 16,
     color: '#059669',
-    textAlign: 'center',
   },
   heroSection: {
     height: 300,
@@ -441,12 +442,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 8,
-    textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 16,
     color: '#FFFFFF',
-    textAlign: 'center',
   },
   section: {
     padding: 20,
@@ -479,6 +478,9 @@ const styles = StyleSheet.create({
     color: '#059669',
     marginBottom: 20,
     textAlign: 'center',
+  },
+  servicesList: {
+    width: '100%',
   },
   serviceCard: {
     flexDirection: 'row',
@@ -551,7 +553,6 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     marginBottom: 16,
-    minHeight: 160,
   },
   featureTitle: {
     fontSize: 16,
@@ -632,6 +633,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
+  },
+  feedbacksList: {
+    width: '100%',
   },
   feedbackCard: {
     backgroundColor: '#F9FAFB',
@@ -740,9 +744,6 @@ const styles = StyleSheet.create({
   footerText: {
     color: '#FFFFFF',
     fontSize: 14,
-  },
-  fullWidth: {
-    width: '100%',
   },
 });
 
