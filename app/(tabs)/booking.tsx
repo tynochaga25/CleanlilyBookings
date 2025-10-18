@@ -353,74 +353,66 @@ const MyBookings = () => {
       colors={["#f0fdf4", "#ecfdf5", "#d1fae5"]} 
       style={styles.gradient}
     >
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[
-          styles.container, 
-          isExtraLargeScreen && styles.containerExtraLarge,
-          isLargeScreen && styles.containerLarge,
-          isSmallScreen && styles.containerSmall
-        ]}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <Image source={logo} style={styles.logo} />
-              <View style={styles.headerText}>
-                <Text style={styles.headerTitle}>My Bookings</Text>
-                <Text style={styles.headerSubtitle}>
-                  Manage your cleaning appointments in one place
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.headerStats}>
-              <Text style={styles.bookingCount}>
-                {filteredBookings.length} {filter === 'all' ? 'total' : filter} 
-                {filteredBookings.length === 1 ? ' booking' : ' bookings'}
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Image source={logo} style={styles.logo} />
+            <View style={styles.headerText}>
+              <Text style={styles.headerTitle}>My Bookings</Text>
+              <Text style={styles.headerSubtitle}>
+                Manage your cleaning appointments in one place
               </Text>
             </View>
           </View>
-
-          {/* Filter Tabs */}
-          <View style={styles.filterContainer}>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterScrollContent}
-            >
-              {[
-                { key: "all", label: "All Bookings", icon: "📋" },
-                { key: "pending", label: "Pending", icon: "⏳" },
-                { key: "confirmed", label: "Confirmed", icon: "✅" },
-                { key: "completed", label: "Completed", icon: "🎉" },
-                { key: "cancelled", label: "Cancelled", icon: "❌" }
-              ].map((item) => (
-                <TouchableOpacity
-                  key={item.key}
-                  style={[
-                    styles.filterTab,
-                    filter === item.key && styles.filterTabActive,
-                  ]}
-                  onPress={() => setFilter(item.key)}
-                >
-                  <Text style={styles.filterIcon}>{item.icon}</Text>
-                  <Text style={[
-                    styles.filterLabel,
-                    filter === item.key && styles.filterLabelActive,
-                  ]}>
-                    {item.label}
-                  </Text>
-                  {filter === item.key && (
-                    <View style={styles.activeIndicator} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+          
+          <View style={styles.headerStats}>
+            <Text style={styles.bookingCount}>
+              {filteredBookings.length} {filter === 'all' ? 'total' : filter} 
+              {filteredBookings.length === 1 ? ' booking' : ' bookings'}
+            </Text>
           </View>
+        </View>
 
+        {/* Filter Tabs */}
+        <View style={styles.filterContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScrollContent}
+          >
+            {[
+              { key: "all", label: "All Bookings", icon: "📋" },
+              { key: "pending", label: "Pending", icon: "⏳" },
+              { key: "confirmed", label: "Confirmed", icon: "✅" },
+              { key: "completed", label: "Completed", icon: "🎉" },
+              { key: "cancelled", label: "Cancelled", icon: "❌" }
+            ].map((item) => (
+              <TouchableOpacity
+                key={item.key}
+                style={[
+                  styles.filterTab,
+                  filter === item.key && styles.filterTabActive,
+                ]}
+                onPress={() => setFilter(item.key)}
+              >
+                <Text style={styles.filterIcon}>{item.icon}</Text>
+                <Text style={[
+                  styles.filterLabel,
+                  filter === item.key && styles.filterLabelActive,
+                ]}>
+                  {item.label}
+                </Text>
+                {filter === item.key && (
+                  <View style={styles.activeIndicator} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Content Area with Scroll */}
+        <View style={styles.contentArea}>
           {/* Desktop Table Header */}
           {!isSmallScreen && filteredBookings.length > 0 && (
             <View style={styles.tableHeader}>
@@ -432,7 +424,7 @@ const MyBookings = () => {
             </View>
           )}
 
-          {/* Bookings List */}
+          {/* Bookings List - Now scrollable */}
           {filteredBookings.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateIcon}>📅</Text>
@@ -446,16 +438,21 @@ const MyBookings = () => {
               </Text>
             </View>
           ) : (
-            <FlatList
-              data={filteredBookings}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              renderItem={renderBookingItem}
-              contentContainerStyle={styles.listContent}
-            />
+            <ScrollView 
+              style={styles.bookingsScrollView}
+              contentContainerStyle={styles.bookingsScrollContent}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
+              {filteredBookings.map((item) => (
+                <View key={item.id}>
+                  {renderBookingItem({ item })}
+                </View>
+              ))}
+            </ScrollView>
           )}
         </View>
-      </ScrollView>
+      </View>
     </LinearGradient>
   );
 };
@@ -464,30 +461,22 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
   container: {
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 20,
+    minHeight: '100%',
   },
-  containerSmall: {
-    paddingHorizontal: 12,
-    paddingVertical: 16,
+  contentArea: {
+    flex: 1,
+    minHeight: 400, // Ensure minimum height for scrolling
   },
-  containerLarge: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    maxWidth: 1200,
-    alignSelf: 'center',
-    width: '100%',
+  bookingsScrollView: {
+    flex: 1,
   },
-  containerExtraLarge: {
-    maxWidth: 1400,
+  bookingsScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   loadingContainer: { 
     flex: 1, 
@@ -620,11 +609,6 @@ const styles = StyleSheet.create({
   priceColumn: { flex: 1, textAlign: 'center' },
   statusColumn: { flex: 1.5, textAlign: 'center' },
   actionColumn: { flex: 1, textAlign: 'center' },
-
-  // List Content
-  listContent: {
-    paddingBottom: 20,
-  },
 
   // Mobile Card
   mobileCard: {
