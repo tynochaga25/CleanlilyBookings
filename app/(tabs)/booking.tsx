@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
   Image,
   Alert,
   useWindowDimensions,
@@ -225,12 +224,12 @@ const MyBookings = () => {
     return (booking.status === "pending" || booking.status === "confirmed") && cancellingId !== booking.id;
   };
 
-  const renderBookingItem = ({ item }) => {
+  const renderBookingItem = (item) => {
     const isCancelling = cancellingId === item.id;
 
     if (isSmallScreen) {
       return (
-        <View style={styles.mobileCard}>
+        <View key={item.id} style={styles.mobileCard}>
           <View style={styles.mobileCardHeader}>
             <View style={styles.serviceInfo}>
               <Text style={styles.mobileServiceName}>
@@ -286,7 +285,7 @@ const MyBookings = () => {
     }
 
     return (
-      <View style={styles.desktopCard}>
+      <View key={item.id} style={styles.desktopCard}>
         <View style={styles.desktopCardContent}>
           <View style={styles.serviceSection}>
             <Text style={styles.desktopServiceName}>
@@ -353,74 +352,66 @@ const MyBookings = () => {
       colors={["#f0fdf4", "#ecfdf5", "#d1fae5"]} 
       style={styles.gradient}
     >
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[
-          styles.container, 
-          isExtraLargeScreen && styles.containerExtraLarge,
-          isLargeScreen && styles.containerLarge,
-          isSmallScreen && styles.containerSmall
-        ]}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <Image source={logo} style={styles.logo} />
-              <View style={styles.headerText}>
-                <Text style={styles.headerTitle}>My Bookings</Text>
-                <Text style={styles.headerSubtitle}>
-                  Manage your cleaning appointments in one place
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.headerStats}>
-              <Text style={styles.bookingCount}>
-                {filteredBookings.length} {filter === 'all' ? 'total' : filter} 
-                {filteredBookings.length === 1 ? ' booking' : ' bookings'}
+      <View style={styles.mainContainer}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Image source={logo} style={styles.logo} />
+            <View style={styles.headerText}>
+              <Text style={styles.headerTitle}>My Bookings</Text>
+              <Text style={styles.headerSubtitle}>
+                Manage your cleaning appointments in one place
               </Text>
             </View>
           </View>
-
-          {/* Filter Tabs */}
-          <View style={styles.filterContainer}>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterScrollContent}
-            >
-              {[
-                { key: "all", label: "All Bookings", icon: "📋" },
-                { key: "pending", label: "Pending", icon: "⏳" },
-                { key: "confirmed", label: "Confirmed", icon: "✅" },
-                { key: "completed", label: "Completed", icon: "🎉" },
-                { key: "cancelled", label: "Cancelled", icon: "❌" }
-              ].map((item) => (
-                <TouchableOpacity
-                  key={item.key}
-                  style={[
-                    styles.filterTab,
-                    filter === item.key && styles.filterTabActive,
-                  ]}
-                  onPress={() => setFilter(item.key)}
-                >
-                  <Text style={styles.filterIcon}>{item.icon}</Text>
-                  <Text style={[
-                    styles.filterLabel,
-                    filter === item.key && styles.filterLabelActive,
-                  ]}>
-                    {item.label}
-                  </Text>
-                  {filter === item.key && (
-                    <View style={styles.activeIndicator} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+          
+          <View style={styles.headerStats}>
+            <Text style={styles.bookingCount}>
+              {filteredBookings.length} {filter === 'all' ? 'total' : filter} 
+              {filteredBookings.length === 1 ? ' booking' : ' bookings'}
+            </Text>
           </View>
+        </View>
 
+        {/* Filter Tabs */}
+        <View style={styles.filterContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScrollContent}
+          >
+            {[
+              { key: "all", label: "All Bookings", icon: "📋" },
+              { key: "pending", label: "Pending", icon: "⏳" },
+              { key: "confirmed", label: "Confirmed", icon: "✅" },
+              { key: "completed", label: "Completed", icon: "🎉" },
+              { key: "cancelled", label: "Cancelled", icon: "❌" }
+            ].map((item) => (
+              <TouchableOpacity
+                key={item.key}
+                style={[
+                  styles.filterTab,
+                  filter === item.key && styles.filterTabActive,
+                ]}
+                onPress={() => setFilter(item.key)}
+              >
+                <Text style={styles.filterIcon}>{item.icon}</Text>
+                <Text style={[
+                  styles.filterLabel,
+                  filter === item.key && styles.filterLabelActive,
+                ]}>
+                  {item.label}
+                </Text>
+                {filter === item.key && (
+                  <View style={styles.activeIndicator} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Content Area - Full stretch */}
+        <View style={styles.contentArea}>
           {/* Desktop Table Header */}
           {!isSmallScreen && filteredBookings.length > 0 && (
             <View style={styles.tableHeader}>
@@ -432,7 +423,7 @@ const MyBookings = () => {
             </View>
           )}
 
-          {/* Bookings List */}
+          {/* Bookings List - Full stretch with proper scrolling */}
           {filteredBookings.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateIcon}>📅</Text>
@@ -446,17 +437,20 @@ const MyBookings = () => {
               </Text>
             </View>
           ) : (
-            <FlatList
-              data={filteredBookings}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={true} // CHANGED: Enable scrolling for web
-              renderItem={renderBookingItem}
-              contentContainerStyle={styles.listContent}
-              style={styles.flatList} // ADDED: Style for FlatList
-            />
+            <ScrollView 
+              style={styles.bookingsScrollView}
+              contentContainerStyle={[
+                styles.bookingsScrollContent,
+                filteredBookings.length > 5 && styles.manyBookingsContent
+              ]}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
+              {filteredBookings.map((item) => renderBookingItem(item))}
+            </ScrollView>
           )}
         </View>
-      </ScrollView>
+      </View>
     </LinearGradient>
   );
 };
@@ -464,49 +458,43 @@ const MyBookings = () => {
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+    minHeight: '100vh', // Ensure full viewport height on web
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  container: {
+  mainContainer: {
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 20,
+    minHeight: '100%', // Full height
+    width: '100%', // Full width
   },
-  containerSmall: {
-    paddingHorizontal: 12,
-    paddingVertical: 16,
+  contentArea: {
+    flex: 1,
+    width: '100%',
+    minHeight: 400, // Minimum height
   },
-  containerLarge: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    maxWidth: 1200,
-    alignSelf: 'center',
+  bookingsScrollView: {
+    flex: 1,
     width: '100%',
   },
-  containerExtraLarge: {
-    maxWidth: 1400,
+  bookingsScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  manyBookingsContent: {
+    minHeight: 'auto', // Allow natural height for many items
   },
   loadingContainer: { 
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center", 
     backgroundColor: '#f0fdf4',
+    minHeight: '100vh',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
     color: "#059669",
     fontWeight: '500',
-  },
-  
-  // ADDED: FlatList style for web scrolling
-  flatList: {
-    flex: 1,
-    maxHeight: Platform.OS === 'web' ? '70vh' : undefined,
   },
   
   // Header Styles
@@ -520,6 +508,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
+    width: '100%', // Full width
   },
   headerContent: {
     flexDirection: 'row',
@@ -562,6 +551,7 @@ const styles = StyleSheet.create({
   // Filter Styles
   filterContainer: {
     marginBottom: 24,
+    width: '100%', // Full width
   },
   filterScrollContent: {
     paddingHorizontal: 8,
@@ -615,6 +605,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 8,
+    width: '100%', // Full width
   },
   columnHeader: {
     fontSize: 14,
@@ -628,11 +619,6 @@ const styles = StyleSheet.create({
   statusColumn: { flex: 1.5, textAlign: 'center' },
   actionColumn: { flex: 1, textAlign: 'center' },
 
-  // List Content
-  listContent: {
-    paddingBottom: 20,
-  },
-
   // Mobile Card
   mobileCard: {
     backgroundColor: "#fff",
@@ -645,12 +631,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    width: '100%', // Full width
+    maxWidth: '100%', // Prevent overflow
   },
   mobileCardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 16,
+    width: '100%',
   },
   serviceInfo: {
     flex: 1,
@@ -669,12 +658,14 @@ const styles = StyleSheet.create({
   },
   mobileDetails: {
     marginBottom: 16,
+    width: '100%',
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
+    width: '100%',
   },
   detailLabel: {
     fontSize: 14,
@@ -701,12 +692,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
+    width: '100%', // Full width
   },
   desktopCardContent: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 20,
     paddingHorizontal: 20,
+    width: '100%', // Full width
   },
   serviceSection: {
     flex: 3,
@@ -799,6 +792,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderRadius: 20,
     marginTop: 20,
+    width: '100%', // Full width
+    minHeight: 300, // Ensure proper height
   },
   emptyStateIcon: {
     fontSize: 64,
