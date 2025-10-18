@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: Platform.OS === 'web' ? 40 : 32,
+    fontSize: Platform.OS === 'web' ? 20 : 16,
     fontWeight: "bold",
     color: "#065f46",
     marginBottom: 8,
