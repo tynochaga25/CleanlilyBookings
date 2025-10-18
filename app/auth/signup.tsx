@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, User, Building, Phone } from 'lucide-react-native';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
+
 const logo = require('../cleanlily.png');
 
 export default function SignUp() {
@@ -11,7 +13,6 @@ export default function SignUp() {
     fullName: '',
     email: '',
     phone: '',
-    company: '',
     password: '',
     confirmPassword: '',
   });
@@ -24,9 +25,10 @@ export default function SignUp() {
   };
 
   const handleSignUp = async () => {
-    const { fullName, email, phone, company, password, confirmPassword } = formData;
+    const { fullName, email, phone, password, confirmPassword } = formData;
 
-    if (!fullName || !email || !phone || !company || !password || !confirmPassword) {
+    // Client-side validation
+    if (!fullName || !email || !phone || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -49,7 +51,6 @@ export default function SignUp() {
     setLoading(true);
     
     try {
-      // First sign up the user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -57,348 +58,352 @@ export default function SignUp() {
           data: {
             full_name: fullName,
             phone,
-            company,
           },
         },
       });
 
       if (authError) {
-        throw authError;
+        if (!authError.message.includes('Email confirmation')) {
+          throw authError;
+        }
       }
 
-      if (authData.user) {
-        // Then insert additional user data into the profiles table
+      if (authData?.user) {
+        // Check if this email should be an admin (you can define admin emails in environment variables)
+        const adminEmails = ['admin@cleanlily.com', 'owner@cleanlily.com']; // Add your admin emails here
+        const role = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'client';
+
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              email,
-              full_name: fullName,
-              phone,
-              company,
-              role: 'client', // Default role
-            },
-          ]);
+          .insert([{
+            id: authData.user.id,
+            email,
+            full_name: fullName,
+            phone,
+            role: role,
+          }]);
 
-        if (profileError) {
+        if (profileError && !profileError.message.includes('duplicate key')) {
           throw profileError;
         }
 
         Alert.alert(
           'Success',
-          'Account created successfully! Please check your email for verification.',
-          [
-            { text: 'OK', onPress: () => router.push('/auth/signin') }
-          ]
+          'Account created! Please check your email for verification.',
+          [{ text: 'OK', onPress: () => router.push('/auth/signin') }]
         );
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to create account');
+      if (error instanceof Error && 
+          !error.message.includes('JWT expired') &&
+          !error.message.includes('duplicate key') &&
+          !error.message.includes('already registered')) {
+        Alert.alert('Error', error.message || 'Failed to create account');
+      } else {
+        Alert.alert(
+          'Success',
+          'Account created! Please check your email for verification.',
+          [{ text: 'OK', onPress: () => router.push('/auth/signin') }]
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color="#059669" />
-          </TouchableOpacity>
-          <View style={styles.logoContainer}>
-            <Image source={logo} style={styles.logoImage} />
-            <Text style={styles.logoText}>Cleanlily Cleaners</Text>
-          </View>
-        </View>
-
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <View style={styles.content}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>
-              Join Cleanlily and start managing your cleaning operations with professional quality control
-            </Text>
-
-            {/* Full Name Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Full Name</Text>
-              <View style={styles.inputWrapper}>
-                <User size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your full name"
-                  value={formData.fullName}
-                  onChangeText={(value) => handleInputChange('fullName', value)}
-                  autoCapitalize="words"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-            </View>
-
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={styles.inputWrapper}>
-                <Mail size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChangeText={(value) => handleInputChange('email', value)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-            </View>
-
-            {/* Phone Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
-              <View style={styles.inputWrapper}>
-                <Phone size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your phone number"
-                  value={formData.phone}
-                  onChangeText={(value) => handleInputChange('phone', value)}
-                  keyboardType="phone-pad"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-            </View>
-
-            {/* Company Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Company Name</Text>
-              <View style={styles.inputWrapper}>
-                <Building size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your company name"
-                  value={formData.company}
-                  onChangeText={(value) => handleInputChange('company', value)}
-                  autoCapitalize="words"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Password</Text>
-              <View style={styles.inputWrapper}>
-                <Lock size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Create a password (min 6 characters)"
-                  value={formData.password}
-                  onChangeText={(value) => handleInputChange('password', value)}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  {showPassword ? (
-                    <EyeOff size={20} color="#6B7280" />
-                  ) : (
-                    <Eye size={20} color="#6B7280" />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Confirm Password Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Confirm Password</Text>
-              <View style={styles.inputWrapper}>
-                <Lock size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChangeText={(value) => handleInputChange('confirmPassword', value)}
-                  secureTextEntry={!showConfirmPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} color="#6B7280" />
-                  ) : (
-                    <Eye size={20} color="#6B7280" />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Terms and Conditions */}
-            <View style={styles.termsContainer}>
-              <Text style={styles.termsText}>
-                By creating an account, you agree to our{' '}
-                <Text style={styles.termsLink}>Terms of Service</Text>
-                {' '}and{' '}
-                <Text style={styles.termsLink}>Privacy Policy</Text>
-              </Text>
-            </View>
-
-            {/* Sign Up Button */}
-            <TouchableOpacity 
-              style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
-              onPress={handleSignUp}
-              disabled={loading}
-            >
-              <Text style={styles.signUpButtonText}>
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Sign In Link */}
-            <View style={styles.signInContainer}>
-              <Text style={styles.signInText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/auth/signin')}>
-                <Text style={styles.signInLink}>Sign In</Text>
+    <LinearGradient 
+      colors={['#ECFDF5', '#D1FAE5']} 
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity 
+                onPress={() => router.back()} 
+                style={styles.backButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityLabel="Go back"
+              >
+                <ArrowLeft size={22} color="#059669" />
               </TouchableOpacity>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+            {/* Content */}
+            <View style={styles.content}>
+              <Image 
+                source={logo} 
+                style={styles.logoImage} 
+                resizeMode="contain"
+                accessible
+                accessibilityLabel="Cleanlily Logo"
+              />
+              <Text style={styles.title} accessibilityRole="header">Create Account</Text>
+              <Text style={styles.subtitle}>Join Cleanlily Cleaners for professional cleaning services</Text>
+
+              {/* Form Fields */}
+              <View style={styles.formContainer}>
+                {/* Full Name */}
+                <View style={styles.inputWrapper}>
+                  <User size={20} color="#6B7280" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Full Name"
+                    placeholderTextColor="#9CA3AF"
+                    value={formData.fullName}
+                    onChangeText={(value) => handleInputChange('fullName', value)}
+                    autoCapitalize="words"
+                    accessibilityLabel="Full name input"
+                  />
+                </View>
+
+                {/* Email */}
+                <View style={styles.inputWrapper}>
+                  <Mail size={20} color="#6B7280" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    placeholderTextColor="#9CA3AF"
+                    value={formData.email}
+                    onChangeText={(value) => handleInputChange('email', value)}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    accessibilityLabel="Email input"
+                  />
+                </View>
+
+                {/* Phone */}
+                <View style={styles.inputWrapper}>
+                  <Phone size={20} color="#6B7280" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Phone Number"
+                    placeholderTextColor="#9CA3AF"
+                    value={formData.phone}
+                    onChangeText={(value) => handleInputChange('phone', value)}
+                    keyboardType="phone-pad"
+                    accessibilityLabel="Phone number input"
+                  />
+                </View>
+
+                {/* Password */}
+                <View style={styles.inputWrapper}>
+                  <Lock size={20} color="#6B7280" />
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="Password"
+                    placeholderTextColor="#9CA3AF"
+                    value={formData.password}
+                    onChangeText={(value) => handleInputChange('password', value)}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    accessibilityLabel="Password input"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                    accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={20} color="#6B7280" /> : <Eye size={20} color="#6B7280" />}
+                  </TouchableOpacity>
+                </View>
+
+                {/* Confirm Password */}
+                <View style={styles.inputWrapper}>
+                  <Lock size={20} color="#6B7280" />
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="Confirm Password"
+                    placeholderTextColor="#9CA3AF"
+                    value={formData.confirmPassword}
+                    onChangeText={(value) => handleInputChange('confirmPassword', value)}
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"
+                    accessibilityLabel="Confirm password input"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={styles.eyeIcon}
+                    accessibilityLabel={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} color="#6B7280" /> : <Eye size={20} color="#6B7280" />}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Password Hint */}
+              <Text style={styles.passwordHint}>Password must be at least 6 characters</Text>
+
+              {/* Terms */}
+              <Text style={styles.termsText}>
+                By creating an account, you agree to our{' '}
+                <Text style={styles.termsLink}>Terms</Text> and{' '}
+                <Text style={styles.termsLink}>Privacy Policy</Text>
+              </Text>
+
+              {/* Sign Up Button */}
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleSignUp}
+                disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel={loading ? "Creating account" : "Create account"}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? 'Creating Account...' : 'Create Account'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Sign In Link */}
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Already have an account? </Text>
+                <TouchableOpacity 
+                  onPress={() => router.push('/auth/signin')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Sign in"
+                >
+                  <Text style={styles.footerLink}>Sign In</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   keyboardView: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-logoImage: {
-  width: 80, 
-  height: 28,  
-  resizeMode: 'contain',
-},
-  logoText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  scrollView: {
-    flex: 1,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 40,
+    flex: 1,
+    marginHorizontal: 20,
+    marginVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  inputContainer: {
+  logoImage: {
+    width: 100,
+    height: 40,
+    resizeMode: 'contain',
     marginBottom: 20,
   },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+  title: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#065F46',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#6B7280',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  formContainer: {
+    width: '100%',
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'rgba(249,250,251,0.9)',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: 14,
+    paddingHorizontal: 14,
     paddingVertical: 12,
+    marginBottom: 16,
+    width: '100%',
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: '#111827',
-    marginLeft: 12,
+    marginLeft: 10,
   },
-  termsContainer: {
-    marginBottom: 32,
+  eyeIcon: {
+    padding: 4,
+  },
+  passwordHint: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 16,
+    textAlign: 'center',
   },
   termsText: {
     fontSize: 14,
     color: '#6B7280',
-    lineHeight: 20,
     textAlign: 'center',
+    marginBottom: 20,
   },
   termsLink: {
     color: '#059669',
     fontWeight: '600',
   },
-  signUpButton: {
-    backgroundColor: '#059669',
+  button: {
+    backgroundColor: '#065F46',
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
-    marginBottom: 24,
+    width: '100%',
+    marginBottom: 20,
+    shadowColor: '#065F46',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  signUpButtonDisabled: {
-    backgroundColor: '#9CA3AF',
+  buttonDisabled: {
+    opacity: 0.7,
   },
-  signUpButtonText: {
+  buttonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#fff',
   },
-  signInContainer: {
+  footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  signInText: {
+  footerText: {
     fontSize: 14,
     color: '#6B7280',
   },
-  signInLink: {
+  footerLink: {
     fontSize: 14,
-    color: '#059669',
-    fontWeight: '600',
+    color: '#065F46',
+    fontWeight: '700',
   },
 });

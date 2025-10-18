@@ -1,5 +1,16 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity, 
+  Alert, 
+  KeyboardAvoidingView, 
+  Platform, 
+  Image 
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
@@ -14,159 +25,93 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    // Input validation
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-
     if (!email.includes('@')) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-
     setLoading(true);
-    
+
     try {
-      // Attempt to sign in with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        // Handle specific error cases
-        if (error.message === 'Invalid login credentials') {
-          throw new Error('Incorrect email or password');
-        } else {
-          throw error;
-        }
-      }
+      if (error) throw new Error(error.message);
 
-      // If sign-in successful
       if (data?.user) {
-        // Check if email is verified
         const { data: { user } } = await supabase.auth.getUser();
-        
         if (!user?.email_confirmed_at) {
-          // If email not verified, sign out and prompt verification
           await supabase.auth.signOut();
-          
-          Alert.alert(
-            'Email Not Verified',
-            'Please verify your email before signing in. Check your inbox for the verification link.',
-            [
-              {
-                text: 'Resend Verification',
-                onPress: async () => {
-                  const { error: resendError } = await supabase.auth.resend({
-                    type: 'signup',
-                    email,
-                  });
-                  if (resendError) {
-                    Alert.alert('Error', resendError.message);
-                  } else {
-                    Alert.alert('Success', 'Verification email resent!');
-                  }
-                },
-              },
-              { text: 'OK' },
-            ]
-          );
+          Alert.alert('Verify Email', 'Check your inbox to confirm your account');
           return;
         }
-
-        // Fetch additional user data from profiles table
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          // Still allow login but show warning
-          Alert.alert('Warning', 'Could not load full profile data');
-        }
-
-        // Successful login - navigate to app
         router.replace('/(tabs)');
       }
     } catch (error) {
-      // Handle errors gracefully
-      let errorMessage = 'Failed to sign in';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      Alert.alert('Error', errorMessage);
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to sign in');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color="#059669" />
-          </TouchableOpacity>
-          <View style={styles.logoContainer}>
-            <Image source={logo} style={styles.logoImage} />
-            <Text style={styles.logoText}>Cleanlily Cleaners</Text>
+    <LinearGradient 
+      colors={['#ECFDF5', '#D1FAE5']} 
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <ArrowLeft size={22} color="#059669" />
+            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Content */}
-        <View style={styles.content}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>
-            Sign in to your Cleanlily account to continue managing your cleaning operations
-          </Text>
+          {/* Content */}
+          <View style={styles.content}>
+            <Image source={logo} style={styles.logoImage} />
+            <Text style={styles.title}>Welcome Back 👋</Text>
+            <Text style={styles.subtitle}>Sign in to continue</Text>
 
-          {/* Email Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email Address</Text>
+            {/* Email Input */}
             <View style={styles.inputWrapper}>
               <Mail size={20} color="#6B7280" />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
+                placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 placeholderTextColor="#9CA3AF"
-                autoFocus={true}
               />
             </View>
-          </View>
 
-          {/* Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Password</Text>
+            {/* Password Input */}
             <View style={styles.inputWrapper}>
               <Lock size={20} color="#6B7280" />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your password"
+                placeholder="Password"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
                 placeholderTextColor="#9CA3AF"
-                onSubmitEditing={handleSignIn} // Allow sign-in on keyboard submit
+                onSubmitEditing={handleSignIn}
               />
-              <TouchableOpacity 
-                onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 {showPassword ? (
                   <EyeOff size={20} color="#6B7280" />
                 ) : (
@@ -174,161 +119,143 @@ export default function SignIn() {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Forgot Password */}
-          <TouchableOpacity 
-            style={styles.forgotPassword}
-            onPress={() => router.push('/auth/forgot-password')}
-            disabled={loading}
-          >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-          {/* Sign In Button */}
-          <TouchableOpacity 
-            style={[styles.signInButton, loading && styles.signInButtonDisabled]}
-            onPress={handleSignIn}
-            disabled={loading}
-          >
-            <Text style={styles.signInButtonText}>
-              {loading ? 'Signing In...' : 'Sign In'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Sign Up Link */}
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>Don't have an account? </Text>
+            {/* Forgot Password */}
             <TouchableOpacity 
-              onPress={() => router.push('/auth/signup')}
+              onPress={() => router.push('/auth/forgot-password')}
               disabled={loading}
+              style={{ alignSelf: 'flex-end', marginBottom: 16 }}
             >
-              <Text style={styles.signUpLink}>Sign Up</Text>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
+
+            {/* Sign In Button */}
+            <TouchableOpacity 
+              style={[styles.button, loading && { opacity: 0.7 }]}
+              onPress={handleSignIn}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Signing In...' : 'Sign In'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Sign Up Link */}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+                <Text style={styles.footerLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  keyboardView: {
-    flex: 1,
+    padding: 20,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    marginBottom: 10,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoImage: {
-    width: 80,  
-    height: 30,  
-    resizeMode: 'contain',
-  },
-  logoText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#059669',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 40,
+  },
+  logoImage: {
+    width: 120,
+    height: 50,
+    resizeMode: 'contain',
+    marginBottom: 30,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: '800',
+    color: '#065F46',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
+    color: '#047857',
+    marginBottom: 40,
+    textAlign: 'center',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    marginBottom: 16,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
+    color: '#1F2937',
     marginLeft: 12,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 32,
-  },
-  forgotPasswordText: {
+  forgotText: {
     fontSize: 14,
     color: '#059669',
     fontWeight: '600',
   },
-  signInButton: {
-    backgroundColor: '#059669',
+  button: {
+    backgroundColor: '#065F46',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+    width: '100%',
     marginBottom: 24,
+    shadowColor: '#065F46',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  signInButtonDisabled: {
-    backgroundColor: '#9CA3AF',
-  },
-  signInButtonText: {
+  buttonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#fff',
   },
-  signUpContainer: {
+  footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  signUpText: {
+  footerText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#374151',
   },
-  signUpLink: {
+  footerLink: {
     fontSize: 14,
-    color: '#059669',
-    fontWeight: '600',
+    color: '#065F46',
+    fontWeight: '700',
   },
 });

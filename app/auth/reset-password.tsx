@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ArrowLeft, Lock, Eye, EyeOff } from 'lucide-react-native';
@@ -58,33 +59,35 @@ export default function ResetPassword() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color="#059669" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Reset Password</Text>
-        </View>
+    <LinearGradient 
+      colors={['#ECFDF5', '#D1FAE5']} 
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <ArrowLeft size={22} color="#059669" />
+            </TouchableOpacity>
+          </View>
 
-        {/* Content */}
-        <View style={styles.content}>
-          <Text style={styles.subtitle}>
-            Create a new password for your account.
-          </Text>
+          {/* Content */}
+          <View style={styles.content}>
+            <Text style={styles.title}>Reset Password</Text>
+            <Text style={styles.subtitle}>
+              Create a new password for your account.
+            </Text>
 
-          {/* New Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>New Password</Text>
+            {/* New Password Input */}
             <View style={styles.inputWrapper}>
               <Lock size={20} color="#6B7280" />
               <TextInput
                 style={styles.input}
-                placeholder="Enter new password"
+                placeholder="New Password"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -103,16 +106,13 @@ export default function ResetPassword() {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Confirm Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Confirm New Password</Text>
+            {/* Confirm Password Input */}
             <View style={styles.inputWrapper}>
               <Lock size={20} color="#6B7280" />
               <TextInput
                 style={styles.input}
-                placeholder="Confirm new password"
+                placeholder="Confirm Password"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
@@ -132,103 +132,114 @@ export default function ResetPassword() {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Reset Button */}
-          <TouchableOpacity 
-            style={[styles.resetButton, loading && styles.resetButtonDisabled]}
-            onPress={handleResetPassword}
-            disabled={loading}
-          >
-            <Text style={styles.resetButtonText}>
-              {loading ? 'Updating...' : 'Update Password'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            {/* Password Hint */}
+            <Text style={styles.passwordHint}>Password must be at least 6 characters</Text>
+
+            {/* Reset Button */}
+            <TouchableOpacity 
+              style={[styles.button, loading && { opacity: 0.7 }]}
+              onPress={handleResetPassword}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Updating...' : 'Update Password'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   keyboardView: {
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 32,
+    marginHorizontal: 20,
+    marginVertical: 10,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#065F46',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#6B7280',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'rgba(249,250,251,0.9)',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: 14,
+    paddingHorizontal: 14,
     paddingVertical: 12,
+    marginBottom: 16,
+    width: '100%',
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: '#111827',
-    marginLeft: 12,
+    marginLeft: 10,
   },
-  resetButton: {
-    backgroundColor: '#059669',
+  passwordHint: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 16,
+    textAlign: 'center',
+    width: '100%',
+  },
+  button: {
+    backgroundColor: '#065F46',
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
-    marginTop: 16,
+    width: '100%',
+    shadowColor: '#059669',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  resetButtonDisabled: {
-    backgroundColor: '#9CA3AF',
-  },
-  resetButtonText: {
+  buttonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#fff',
   },
 });

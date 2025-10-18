@@ -1,46 +1,62 @@
-
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://wkmvvlvznxazvwcccptx.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrbXZ2bHZ6bnhhenZ3Y2NjcHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNTY2MjUsImV4cCI6MjA2OTczMjYyNX0.XMNjEo_xoou2emfzAt6dVXcBtWj2_NZOth8ZUo96pa8';
+const supabaseUrl = 'https://ryqjkslsgfcycxybdeoj.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5cWprc2xzZ2ZjeWN4eWJkZW9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MTk5NzMsImV4cCI6MjA3MzA5NTk3M30.G3TTKLpIdBbpcvaO7_SWDuAsvehLI5mT0U85eM5uw50';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-  },
-});
+export const supabase = createClient(
+  'https://ryqjkslsgfcycxybdeoj.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5cWprc2xzZ2ZjeWN4eWJkZW9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MTk5NzMsImV4cCI6MjA3MzA5NTk3M30.G3TTKLpIdBbpcvaO7_SWDuAsvehLI5mT0U85eM5uw50',
+  {
+    global: {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      }
+    }
+  }
+);
 
-// Define your database types
-export interface Premise {
-  id: number;
+// Database types
+export type Profile = {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string;
+  role: 'client' | 'cleaner' | 'admin';
+  created_at: string;
+  updated_at: string;
+};
+
+export type Service = {
+  id: string;
   name: string;
-  address: string;
-  contact_person: string;
-  contact_phone: string;
-  contact_email?: string;
-  service_type: string;
-  cleaning_frequency: string;
-  special_instructions?: string;
-  status: 'pending' | 'completed' | 'issues';
-  cleaner: string;
-  last_visit?: string;
-  next_scheduled: string;
+  description: string;
+  price: number;
+  duration: number; 
+  category: string;
   created_at: string;
-}
+};
 
-export interface InspectionReport {
-  id: number;
-  premise_id: number;
-  inspector_name: string;
-  date: string;
-  time_in: string;
-  time_out: string;
-  sites_visited: number;
-  client_feedback: string;
-  overall_rating: string;
-  ratings: Record<string, string>;
-  comments: Record<string, string>;
+export type Booking = {
+  id: string;
+  client_id: string;
+  cleaner_id: string | null;
+  service_id: string;
+  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  scheduled_date: string;
+  scheduled_time: string;
+  address: string;
+  special_instructions: string | null;
+  total_price: number;
   created_at: string;
-}
+  updated_at: string;
+};
+
+export type Review = {
+  id: string;
+  booking_id: string;
+  client_id: string;
+  cleaner_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+};

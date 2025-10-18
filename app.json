@@ -1,19 +1,22 @@
 {
   "expo": {
-    "name": "bolt-expo-nativewind",
-    "slug": "bolt-expo-nativewind",
+    "name": "Cleanlily Pro (Cleaner)",
+    "slug": "cleanlily-pro-cleaner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "cleanlilypro",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.cleanlily",
+      "bundleIdentifier": "com.cleanlily.pro.cleaner",
       "associatedDomains": [
         "applinks:yourdomain.com"
-      ]
+      ],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "intentFilters": [
@@ -21,7 +24,7 @@
           "action": "VIEW",
           "data": [
             {
-              "scheme": "cleanlily",
+              "scheme": "cleanlilypro",
               "host": "auth",
               "pathPrefix": "/reset-password"
             }
@@ -31,18 +34,20 @@
             "DEFAULT"
           ]
         }
-      ]
+      ],
+      "package": "com.cleanlily.pro.cleaner"
     },
     "web": {
       "bundler": "metro",
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/iconn.png"
     },
     "plugins": [
       "expo-router",
       "expo-font",
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-mail-composer"
     ],
     "experiments": {
       "typedRoutes": true
@@ -50,9 +55,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a2aacb22-50d2-4ab1-9baf-8b1e4802e801"
+        "projectId": "bfee1414-6edb-4428-ba9d-fbf86bfe072d"
       }
     },
-    "owner": "tinorrr"
+    "owner": "smuggerteey"
   }
 }

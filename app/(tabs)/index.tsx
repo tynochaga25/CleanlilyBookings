@@ -1,423 +1,500 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { CircleCheck as CheckCircle, Clock, TriangleAlert as AlertTriangle, MapPin, Users, Calendar } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Dimensions,
+  ActivityIndicator,
+  Modal,
+  useWindowDimensions,
+} from 'react-native';
 import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Clock } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
+import BookingModal from '../components/BookingModal';
 
-export default function Dashboard() {
-  const [currentDate, setCurrentDate] = useState('');
-  const [currentTime, setCurrentTime] = useState('');
-  const [greeting, setGreeting] = useState('');
-  const [stats, setStats] = useState({
-    completedToday: 0,
-    pendingTasks: 0,
-    issuesFound: 0,
-    activePremises: 0
-  });
-  const [recentVisits, setRecentVisits] = useState<any[]>([]);
+const { width, height } = Dimensions.get('window');
+const scaleFont = (size: number) => Math.min(size * (width / 375), size * 1.2); // Limit maximum scaling
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+  category: string;
+  created_at: string;
+}
+
+export default function HomeScreen() {
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isSmallScreen = windowHeight < 700;
 
   useEffect(() => {
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 1000);
-    
-    fetchDashboardData();
-    
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel('dashboard_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'inspection_reports' },
-        () => fetchDashboardData()
-      )
-      .subscribe();
-
-    return () => {
-      clearInterval(interval);
-      supabase.removeChannel(subscription);
-    };
+    fetchServices();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchServices = async () => {
     try {
-      setLoading(true);
-      
-      // Fetch stats
-      const { data: statsData, error: statsError } = await supabase
-        .from('dashboard_stats')
+      const { data, error } = await supabase
+        .from('services')
         .select('*')
-        .maybeSingle();
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setServices(data || []);
       
-      if (statsError) throw statsError;
-      
-      // Calculate pending tasks (premises without inspections today)
-      const { count: pendingCount } = await supabase
-        .from('premises')
-        .select('*', { count: 'exact', head: true })
-        .not('id', 'in', 
-          supabase
-            .from('inspection_reports')
-            .select('premise_id')
-            .eq('date', new Date().toISOString().split('T')[0])
-        );
-      
-      setStats({
-        completedToday: statsData.completed_today,
-        pendingTasks: pendingCount || 0,
-        issuesFound: statsData.issues_found,
-        activePremises: statsData.active_premises
-      });
-      
-      // Fetch recent visits
-      const { data: visitsData, error: visitsError } = await supabase
-        .from('inspection_reports')
-        .select(`
-          id,
-          created_at,
-          overall_rating,
-          inspector_name,
-          premises(name)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(3);
-      
-      if (visitsError) throw visitsError;
-      
-      setRecentVisits(visitsData.map(visit => ({
-        id: visit.id,
-        premise: visit.premises?.name || 'Unknown Premise',
-        time: formatTimeAgo(visit.created_at),
-        status: visit.overall_rating === 'Poor' ? 'issues' : 'completed',
-        cleaner: visit.inspector_name,
-        rating: visit.overall_rating
-      })));
-      
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      // Debug: Check if duration exists in the data
+      console.log('Services data:', data);
+      if (data && data.length > 0) {
+        console.log('First service duration:', data[0].duration);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load services');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (seconds < 60) return `${seconds} seconds ago`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    return `${Math.floor(seconds / 86400)} days ago`;
+  const handleBookService = (service: Service) => {
+    setSelectedService(service);
+    setShowBookingModal(true);
   };
 
-  const updateDateTime = () => {
-    const now = new Date();
-    
-    // Format date
-    const options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'short', day: 'numeric' };
-    const formattedDate = now.toLocaleDateString('en-US', options);
-    setCurrentDate(formattedDate);
-    
-    // Format time
-    const hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const formattedHours = hours % 12 || 12;
-    setCurrentTime(`${formattedHours}:${minutes} ${ampm}`);
-    
-    // Set greeting
-    if (hours < 12) setGreeting('Good Morning!');
-    else if (hours < 18) setGreeting('Good Afternoon!');
-    else setGreeting('Good Evening!');
+  const handleBookingSuccess = () => {
+    setShowBookingModal(false);
+    setSelectedService(null);
   };
 
-  const statsData = [
-    { title: 'Completed Today', value: stats.completedToday.toString(), icon: CheckCircle, color: '#059669' },
-    { title: 'Pending Tasks', value: stats.pendingTasks.toString(), icon: Clock, color: '#F59E0B' },
-    { title: 'Issues Found', value: stats.issuesFound.toString(), icon: AlertTriangle, color: '#DC2626' },
-    { title: 'Active Premises', value: stats.activePremises.toString(), icon: MapPin, color: '#3B82F6' },
-  ];
+  const handleBookingClose = () => {
+    setShowBookingModal(false);
+    setSelectedService(null);
+  };
+
+  const getServiceIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'residential': return '🏠';
+      case 'commercial': return '🏢';
+      case 'special': return '✨';
+      default: return '🧹';
+    }
+  };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#059669" />
-      </SafeAreaView>
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#047857" />
+        <Text style={styles.loadingText}>Loading services...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchServices}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.greeting}>{greeting}</Text>
-              <Text style={styles.subtitle}>Quality Control Dashboard</Text>
-            </View>
-            <View style={styles.dateContainer}>
-              <Calendar size={20} color="#059669" style={styles.calendarIcon} />
-              <View>
-                <Text style={styles.date}>{currentDate}</Text>
-                <Text style={styles.time}>{currentTime}</Text>
-              </View>
-            </View>
+    <View style={styles.container}>
+      <StatusBar style="light" />
+
+      {/* Header - Reduced height */}
+      <View style={[styles.header, isSmallScreen && styles.headerSmall]}>
+        <Image
+          source={require('../cleanlily.png')}
+          style={[styles.logo, isSmallScreen && styles.logoSmall]}
+          resizeMode="contain"
+        />
+        <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
+          Cleanlily Cleaners
+        </Text>
+        <Text style={[styles.headerSubtitle, isSmallScreen && styles.headerSubtitleSmall]}>
+          Professional cleaning services, made simple
+        </Text>
+      </View>
+
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={[styles.scrollContent, isSmallScreen && styles.scrollContentSmall]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Stats */}
+        <View style={[styles.statsContainer, isSmallScreen && styles.statsContainerSmall]}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>500+</Text>
+            <Text style={styles.statLabel}>Happy Customers</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>4.9</Text>
+            <Text style={styles.statLabel}>⭐ Rating</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>1000+</Text>
+            <Text style={styles.statLabel}>Cleanings Done</Text>
           </View>
         </View>
 
-        {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          {statsData.map((stat, index) => (
-            <TouchableOpacity key={index} style={styles.statCard}>
-              <View style={[styles.statIcon, { backgroundColor: `${stat.color}15` }]}>
-                <stat.icon size={24} color={stat.color} />
-              </View>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statTitle}>{stat.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Quick Actions */}
+        {/* Services Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.actionGrid}>
-            <TouchableOpacity 
-              style={styles.actionCard}
-              onPress={() => router.push('/premises')}
-            >
-              <MapPin size={24} color="#059669" />
-              <Text style={styles.actionText}>Visit Premise</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.actionCard}
-              onPress={() => router.push('/team')}
-            >
-              <Users size={24} color="#059669" />
-              <Text style={styles.actionText}>Get Help</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Recent Visits */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Visits</Text>
-          {recentVisits.map((visit) => (
-            <TouchableOpacity 
-              key={visit.id} 
-              style={styles.visitCard}
-              onPress={() => router.push(`/reports/${visit.id}`)}
-            >
-              <View style={styles.visitHeader}>
-                <Text style={styles.premiseName}>{visit.premise}</Text>
-                <View style={[
-                  styles.statusBadge,
-                  { backgroundColor: visit.status === 'completed' ? '#059669' : '#DC2626' }
-                ]}>
-                  <Text style={styles.statusText}>
-                    {visit.status === 'completed' ? 'Completed' : 'Issues'}
+          <Text style={styles.sectionTitle}>Our Services</Text>
+          {services.map((service) => (
+            <View key={service.id} style={[styles.serviceCard, isSmallScreen && styles.serviceCardSmall]}>
+              <View style={styles.serviceHeader}>
+                <View style={styles.iconCircle}>
+                  <Text style={styles.serviceIcon}>{getServiceIcon(service.category)}</Text>
+                </View>
+                <View style={styles.serviceInfo}>
+                  <Text style={styles.serviceName}>{service.name}</Text>
+                  <Text style={styles.serviceDescription} numberOfLines={2}>
+                    {service.description}
                   </Text>
+                  <Text style={styles.serviceCategory}>{service.category}</Text>
                 </View>
               </View>
-              <View style={styles.visitDetails}>
-                <Text style={styles.cleanerName}>Inspector: {visit.cleaner}</Text>
-                <Text style={styles.visitTime}>{visit.time}</Text>
+              
+              <View style={styles.serviceDetails}>
+                <View style={styles.serviceMetrics}>
+                  <Text style={styles.price}>${service.price}</Text>
+                  <View style={styles.metric}>
+                    <Clock size={isSmallScreen ? 14 : 16} color="#047857" />
+                    <Text style={styles.metricText}>
+                      {service.duration} {service.duration === 1 ? 'hour' : 'hours'}
+                    </Text>
+                  </View>
+                </View>
+                
+                <TouchableOpacity
+                  style={[styles.bookButton, isSmallScreen && styles.bookButtonSmall]}
+                  onPress={() => handleBookService(service)}
+                >
+                  <Text style={styles.bookButtonText}>Book Now</Text>
+                </TouchableOpacity>
               </View>
-              <Text style={[
-                styles.rating,
-                { color: visit.status === 'completed' ? '#059669' : '#DC2626' }
-              ]}>
-                Rating: {visit.rating}
-              </Text>
-            </TouchableOpacity>
+            </View>
           ))}
         </View>
+
+        {/* Features */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Why Choose Us?</Text>
+          
+          <View style={styles.featuresGrid}>
+            {[
+              { icon: '🛡️', title: 'Insured & Bonded', text: 'All our cleaners are fully insured' },
+              { icon: '⚡', title: 'Same Day Service', text: 'Book and get cleaned today' },
+              { icon: '💚', title: 'Eco-Friendly', text: 'Safe, non-toxic cleaning products' },
+              { icon: '💯', title: 'Satisfaction Guarantee', text: "Not happy? We'll make it right" },
+            ].map((f, i) => (
+              <View key={i} style={[styles.feature, isSmallScreen && styles.featureSmall]}>
+                <View style={styles.featureIconWrapper}><Text style={styles.featureIcon}>{f.icon}</Text></View>
+                <Text style={styles.featureTitle}>{f.title}</Text>
+                <Text style={styles.featureText} numberOfLines={2}>{f.text}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Booking Modal */}
+      <Modal
+        visible={showBookingModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleBookingClose}
+      >
+        <View style={styles.modalContainer}>
+          {selectedService && (
+            <BookingModal
+              service={selectedService}
+              onClose={handleBookingClose}
+              onSuccess={handleBookingSuccess}
+            />
+          )}
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
+  container: { 
+    flex: 1, 
+    backgroundColor: '#F9FAFB' 
   },
-  loadingContainer: {
-    flex: 1,
+  centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: scaleFont(16),
+    color: '#6B7280',
+  },
+  errorText: {
+    fontSize: scaleFont(16),
+    color: '#DC2626',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#047857',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
   header: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    marginBottom: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: '#047857',
+    paddingTop: 40,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
     alignItems: 'center',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  headerTextContainer: {
-    flex: 1,
+  headerSmall: {
+    paddingTop: 30,
+    paddingBottom: 20,
   },
-  greeting: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
+  logo: { 
+    width: width * 0.25, 
+    height: width * 0.15, 
+    marginBottom: 10 
   },
-  subtitle: {
-    fontSize: 15,
-    color: '#6B7280',
+  logoSmall: {
+    width: width * 0.2,
+    height: width * 0.12,
+    marginBottom: 8,
   },
-  dateContainer: {
+  headerTitle: { 
+    fontSize: scaleFont(22), 
+    fontWeight: 'bold', 
+    color: 'white', 
+    marginBottom: 4 
+  },
+  headerTitleSmall: {
+    fontSize: scaleFont(20),
+  },
+  headerSubtitle: { 
+    fontSize: scaleFont(13), 
+    color: 'rgba(255,255,255,0.85)', 
+    textAlign: 'center' 
+  },
+  headerSubtitleSmall: {
+    fontSize: scaleFont(12),
+  },
+  content: { flex: 1 },
+  scrollContent: {
+    paddingBottom: 30,
+  },
+  scrollContentSmall: {
+    paddingBottom: 20,
+  },
+  statsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    marginLeft: 10,
-  },
-  calendarIcon: {
-    marginRight: 8,
-  },
-  date: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#059669',
-  },
-  time: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#059669',
-    textAlign: 'right',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  statCard: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
+    backgroundColor: 'white',
+    marginHorizontal: 20,
+    marginTop: -16,
     borderRadius: 16,
-    marginBottom: 16,
-    marginRight: '2%',
-    alignItems: 'center',
+    padding: 16,
+    justifyContent: 'space-between',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
     elevation: 3,
   },
-  statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  statsContainerSmall: {
+    marginHorizontal: 16,
+    padding: 12,
+    marginTop: -12,
+  },
+  statItem: { 
+    flex: 1, 
+    alignItems: 'center' 
+  },
+  statNumber: { 
+    fontSize: scaleFont(18), 
+    fontWeight: '700', 
+    color: '#047857' 
+  },
+  statLabel: { 
+    fontSize: scaleFont(11), 
+    color: '#6B7280', 
+    marginTop: 4,
+    textAlign: 'center'
+  },
+  section: { 
+    paddingHorizontal: 20, 
+    paddingTop: 28 
+  },
+  sectionTitle: { 
+    fontSize: scaleFont(18), 
+    fontWeight: '700', 
+    color: '#1F2937', 
+    marginBottom: 16 
+  },
+  serviceCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  serviceCardSmall: {
+    padding: 12,
+    marginBottom: 12,
+  },
+  serviceHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'flex-start', 
+    marginBottom: 12 
+  },
+  iconCircle: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 32,
+    padding: 8,
+    marginRight: 12,
+    width: 50,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
   },
-  statValue: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
+  serviceIcon: { 
+    fontSize: scaleFont(24) 
   },
-  statTitle: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
+  serviceInfo: { 
+    flex: 1 
+  },
+  serviceName: { 
+    fontSize: scaleFont(15), 
+    fontWeight: '600', 
+    color: '#111827', 
+    marginBottom: 4 
+  },
+  serviceDescription: { 
+    fontSize: scaleFont(12), 
+    color: '#6B7280', 
+    lineHeight: 18, 
+    marginBottom: 4 
+  },
+  serviceCategory: {
+    fontSize: scaleFont(11),
+    color: '#059669',
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  serviceDetails: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
+  },
+  serviceMetrics: { 
+    flex: 1 
+  },
+  price: { 
+    fontSize: scaleFont(16), 
+    fontWeight: 'bold', 
+    color: '#047857', 
+    marginBottom: 4 
+  },
+  metric: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+  },
+  metricText: { 
+    fontSize: scaleFont(12),
+    color: '#374151',
+    marginLeft: 4,
     fontWeight: '500',
   },
-  section: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 16,
-  },
-  actionGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  actionCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginHorizontal: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  actionText: {
-    marginTop: 12,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  visitCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+  bookButton: {
+    backgroundColor: '#047857',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 24,
+    shadowColor: '#047857',
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
   },
-  visitHeader: {
+  bookButtonSmall: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  bookButtonText: { 
+    color: 'white', 
+    fontWeight: '600', 
+    fontSize: scaleFont(12) 
+  },
+  featuresGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
+  },
+  feature: {
+    backgroundColor: 'white',
+    width: width * 0.43,
+    padding: 14,
+    borderRadius: 14,
     alignItems: 'center',
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  featureSmall: {
+    width: width * 0.44,
+    padding: 12,
+    marginBottom: 12,
+  },
+  featureIconWrapper: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 32,
+    padding: 10,
     marginBottom: 8,
   },
-  premiseName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+  featureIcon: { 
+    fontSize: scaleFont(24) 
+  },
+  featureTitle: { 
+    fontSize: scaleFont(13), 
+    fontWeight: '600', 
+    color: '#111827', 
+    marginBottom: 4, 
+    textAlign: 'center' 
+  },
+  featureText: { 
+    fontSize: scaleFont(11), 
+    color: '#6B7280', 
+    textAlign: 'center', 
+    lineHeight: 16 
+  },
+  modalContainer: {
     flex: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  visitDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  cleanerName: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  visitTime: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  rating: {
-    fontSize: 14,
-    fontWeight: '600',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
 });

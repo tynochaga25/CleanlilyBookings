@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { ClipboardCheck, MapPin, Users, Settings } from 'lucide-react-native';
+import { Chrome as Home, Calendar, User, MoreHorizontal, BookOpen } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -9,61 +9,53 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#059669',
         tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
-          position: 'absolute',
-          bottom: 30,               // ⬅️ raised high
-          left: 20,
-          right: 20,
-          backgroundColor: '#FFFFFF',
-          borderRadius: 20,
-          height: 70,
-          paddingBottom: 10,
+          backgroundColor: 'white',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
           paddingTop: 10,
-          elevation: 10,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 10,
+          paddingBottom: 10,
+          height: 80,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
+          marginTop: -4,
         },
       }}
     >
+      {/* Home Tab */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ size, color }) => (
-            <ClipboardCheck size={size} color={color} />
-          ),
+          title: 'Home',
+          tabBarIcon: ({ size, color }) => <Home size={size} color={color} />,
         }}
       />
+
+      {/* Bookings Tab */}
       <Tabs.Screen
-        name="premises"
+        name="booking"
         options={{
-          title: 'Premises',
-          tabBarIcon: ({ size, color }) => (
-            <MapPin size={size} color={color} />
-          ),
+          title: 'Bookings',
+          tabBarIcon: ({ size, color }) => <Calendar size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="team"
-        options={{
-          title: 'Help',
-          tabBarIcon: ({ size, color }) => (
-            <Users size={size} color={color} />
-          ),
-        }}
-      />
+
+      {/* Profile Tab */}
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ size, color }) => (
-            <Settings size={size} color={color} />
-          ),
+          tabBarIcon: ({ size, color }) => <User size={size} color={color} />,
+        }}
+      />
+
+      {/* More Tab */}
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: 'More',
+          tabBarIcon: ({ size, color }) => <MoreHorizontal size={size} color={color} />,
         }}
       />
     </Tabs>
