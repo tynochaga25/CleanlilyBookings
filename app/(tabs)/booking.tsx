@@ -348,140 +348,137 @@ const MyBookings = () => {
   }
 
   return (
-    <LinearGradient 
-      colors={["#f0fdf4", "#ecfdf5", "#d1fae5"]} 
-      style={styles.gradient}
+    <ScrollView 
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollViewContent}
+      showsVerticalScrollIndicator={true}
     >
-      <View style={styles.mainContainer}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Image source={logo} style={styles.logo} />
-            <View style={styles.headerText}>
-              <Text style={styles.headerTitle}>My Bookings</Text>
-              <Text style={styles.headerSubtitle}>
-                Manage your cleaning appointments in one place
-              </Text>
-            </View>
-          </View>
-          
-          <View style={styles.headerStats}>
-            <Text style={styles.bookingCount}>
-              {filteredBookings.length} {filter === 'all' ? 'total' : filter} 
-              {filteredBookings.length === 1 ? ' booking' : ' bookings'}
-            </Text>
-          </View>
-        </View>
-
-        {/* Filter Tabs */}
-        <View style={styles.filterContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterScrollContent}
-          >
-            {[
-              { key: "all", label: "All Bookings", icon: "📋" },
-              { key: "pending", label: "Pending", icon: "⏳" },
-              { key: "confirmed", label: "Confirmed", icon: "✅" },
-              { key: "completed", label: "Completed", icon: "🎉" },
-              { key: "cancelled", label: "Cancelled", icon: "❌" }
-            ].map((item) => (
-              <TouchableOpacity
-                key={item.key}
-                style={[
-                  styles.filterTab,
-                  filter === item.key && styles.filterTabActive,
-                ]}
-                onPress={() => setFilter(item.key)}
-              >
-                <Text style={styles.filterIcon}>{item.icon}</Text>
-                <Text style={[
-                  styles.filterLabel,
-                  filter === item.key && styles.filterLabelActive,
-                ]}>
-                  {item.label}
+      <LinearGradient 
+        colors={["#f0fdf4", "#ecfdf5", "#d1fae5"]} 
+        style={styles.gradient}
+      >
+        <View style={styles.mainContainer}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <Image source={logo} style={styles.logo} />
+              <View style={styles.headerText}>
+                <Text style={styles.headerTitle}>My Bookings</Text>
+                <Text style={styles.headerSubtitle}>
+                  Manage your cleaning appointments in one place
                 </Text>
-                {filter === item.key && (
-                  <View style={styles.activeIndicator} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Content Area - Full stretch */}
-        <View style={styles.contentArea}>
-          {/* Desktop Table Header */}
-          {!isSmallScreen && filteredBookings.length > 0 && (
-            <View style={styles.tableHeader}>
-              <Text style={[styles.columnHeader, styles.serviceColumn]}>SERVICE</Text>
-              <Text style={[styles.columnHeader, styles.datetimeColumn]}>DATE & TIME</Text>
-              <Text style={[styles.columnHeader, styles.priceColumn]}>PRICE</Text>
-              <Text style={[styles.columnHeader, styles.statusColumn]}>STATUS</Text>
-              <Text style={[styles.columnHeader, styles.actionColumn]}>ACTION</Text>
+              </View>
             </View>
-          )}
-
-          {/* Bookings List - Full stretch with proper scrolling */}
-          {filteredBookings.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateIcon}>📅</Text>
-              <Text style={styles.emptyStateTitle}>
-                {filter === 'all' ? 'No bookings yet' : `No ${filter} bookings`}
-              </Text>
-              <Text style={styles.emptyStateText}>
-                {filter === 'all' 
-                  ? "When you book a cleaning service, it will appear here." 
-                  : `You don't have any ${filter} bookings at the moment.`}
+            
+            <View style={styles.headerStats}>
+              <Text style={styles.bookingCount}>
+                {filteredBookings.length} {filter === 'all' ? 'total' : filter} 
+                {filteredBookings.length === 1 ? ' booking' : ' bookings'}
               </Text>
             </View>
-          ) : (
+          </View>
+
+          {/* Filter Tabs */}
+          <View style={styles.filterContainer}>
             <ScrollView 
-              style={styles.bookingsScrollView}
-              contentContainerStyle={[
-                styles.bookingsScrollContent,
-                filteredBookings.length > 5 && styles.manyBookingsContent
-              ]}
-              showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterScrollContent}
             >
-              {filteredBookings.map((item) => renderBookingItem(item))}
+              {[
+                { key: "all", label: "All Bookings", icon: "📋" },
+                { key: "pending", label: "Pending", icon: "⏳" },
+                { key: "confirmed", label: "Confirmed", icon: "✅" },
+                { key: "completed", label: "Completed", icon: "🎉" },
+                { key: "cancelled", label: "Cancelled", icon: "❌" }
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[
+                    styles.filterTab,
+                    filter === item.key && styles.filterTabActive,
+                  ]}
+                  onPress={() => setFilter(item.key)}
+                >
+                  <Text style={styles.filterIcon}>{item.icon}</Text>
+                  <Text style={[
+                    styles.filterLabel,
+                    filter === item.key && styles.filterLabelActive,
+                  ]}>
+                    {item.label}
+                  </Text>
+                  {filter === item.key && (
+                    <View style={styles.activeIndicator} />
+                  )}
+                </TouchableOpacity>
+              ))}
             </ScrollView>
-          )}
+          </View>
+
+          {/* Content Area */}
+          <View style={styles.contentArea}>
+            {/* Desktop Table Header */}
+            {!isSmallScreen && filteredBookings.length > 0 && (
+              <View style={styles.tableHeader}>
+                <Text style={[styles.columnHeader, styles.serviceColumn]}>SERVICE</Text>
+                <Text style={[styles.columnHeader, styles.datetimeColumn]}>DATE & TIME</Text>
+                <Text style={[styles.columnHeader, styles.priceColumn]}>PRICE</Text>
+                <Text style={[styles.columnHeader, styles.statusColumn]}>STATUS</Text>
+                <Text style={[styles.columnHeader, styles.actionColumn]}>ACTION</Text>
+              </View>
+            )}
+
+            {/* Bookings List */}
+            {filteredBookings.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateIcon}>📅</Text>
+                <Text style={styles.emptyStateTitle}>
+                  {filter === 'all' ? 'No bookings yet' : `No ${filter} bookings`}
+                </Text>
+                <Text style={styles.emptyStateText}>
+                  {filter === 'all' 
+                    ? "When you book a cleaning service, it will appear here." 
+                    : `You don't have any ${filter} bookings at the moment.`}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.bookingsList}>
+                {filteredBookings.map((item) => renderBookingItem(item))}
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-    </LinearGradient>
+      </LinearGradient>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#f0fdf4',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    minHeight: '100%',
+  },
   gradient: {
     flex: 1,
-    minHeight: '100vh', // Ensure full viewport height on web
+    minHeight: '100%',
   },
   mainContainer: {
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 20,
-    minHeight: '100%', // Full height
-    width: '100%', // Full width
+    minHeight: '100%',
+    width: '100%',
   },
   contentArea: {
-    flex: 1,
     width: '100%',
-    minHeight: 400, // Minimum height
+    minHeight: 400,
   },
-  bookingsScrollView: {
-    flex: 1,
+  bookingsList: {
     width: '100%',
-  },
-  bookingsScrollContent: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-  manyBookingsContent: {
-    minHeight: 'auto', // Allow natural height for many items
   },
   loadingContainer: { 
     flex: 1, 
@@ -508,7 +505,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
-    width: '100%', // Full width
+    width: '100%',
   },
   headerContent: {
     flexDirection: 'row',
@@ -551,7 +548,7 @@ const styles = StyleSheet.create({
   // Filter Styles
   filterContainer: {
     marginBottom: 24,
-    width: '100%', // Full width
+    width: '100%',
   },
   filterScrollContent: {
     paddingHorizontal: 8,
@@ -605,7 +602,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 8,
-    width: '100%', // Full width
+    width: '100%',
   },
   columnHeader: {
     fontSize: 14,
@@ -631,8 +628,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-    width: '100%', // Full width
-    maxWidth: '100%', // Prevent overflow
+    width: '100%',
+    maxWidth: '100%',
   },
   mobileCardHeader: {
     flexDirection: "row",
@@ -692,14 +689,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
-    width: '100%', // Full width
+    width: '100%',
   },
   desktopCardContent: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 20,
     paddingHorizontal: 20,
-    width: '100%', // Full width
+    width: '100%',
   },
   serviceSection: {
     flex: 3,
@@ -792,8 +789,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderRadius: 20,
     marginTop: 20,
-    width: '100%', // Full width
-    minHeight: 300, // Ensure proper height
+    width: '100%',
+    minHeight: 300,
   },
   emptyStateIcon: {
     fontSize: 64,
