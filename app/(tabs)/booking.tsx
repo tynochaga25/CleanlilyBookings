@@ -381,7 +381,7 @@ const MyBookings = () => {
           style={styles.gradient}
         >
           <View style={styles.mainContainer}>
-            {/* Header */}
+            {/* Header - Made Smaller */}
             <View style={styles.header}>
               <View style={styles.headerContent}>
                 <Image source={logo} style={styles.logo} />
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     paddingHorizontal: Math.max(16, Platform.OS === 'web' ? 24 : 16),
-    paddingVertical: Platform.OS === 'web' ? 32 : 20,
+    paddingVertical: Platform.OS === 'web' ? 24 : 16, // Reduced vertical padding
     minHeight: Platform.OS === 'web' ? '100vh' : '100%',
     maxWidth: Platform.OS === 'web' ? 1400 : '100%',
     alignSelf: 'center',
@@ -539,17 +539,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   
-  // Header Styles
+  // Header Styles - Made Smaller
   header: {
     backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 20,
-    padding: Platform.OS === 'web' ? 32 : 24,
-    marginBottom: 24,
+    borderRadius: 16, // Reduced from 20
+    padding: Platform.OS === 'web' ? 20 : 16, // Reduced padding
+    marginBottom: 20, // Reduced margin
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 }, // Reduced shadow
+    shadowOpacity: 0.08,
+    shadowRadius: 8, // Reduced shadow radius
+    elevation: 4, // Reduced elevation
     width: '100%',
     ...(Platform.OS === 'web' && {
       backdropFilter: 'blur(10px)',
@@ -559,86 +559,86 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: Platform.OS === 'web' ? 'row' : 'column',
     alignItems: Platform.OS === 'web' ? 'center' : 'flex-start',
-    marginBottom: Platform.OS === 'web' ? 0 : 16,
+    marginBottom: Platform.OS === 'web' ? 0 : 12, // Reduced margin
   },
   headerText: {
-    marginLeft: Platform.OS === 'web' ? 24 : 0,
-    marginTop: Platform.OS === 'web' ? 0 : 16,
+    marginLeft: Platform.OS === 'web' ? 20 : 0, // Reduced margin
+    marginTop: Platform.OS === 'web' ? 0 : 12, // Reduced margin
     flex: 1,
   },
   headerTitle: {
-    fontSize: Platform.OS === 'web' ? 20 : 16,
+    fontSize: Platform.OS === 'web' ? 32 : 28, // Reduced font size
     fontWeight: "bold",
     color: "#065f46",
-    marginBottom: 8,
+    marginBottom: 6, // Reduced margin
   },
   headerSubtitle: {
-    fontSize: Platform.OS === 'web' ? 18 : 16,
+    fontSize: Platform.OS === 'web' ? 16 : 14, // Reduced font size
     color: "#6b7280",
-    lineHeight: 24,
+    lineHeight: 20, // Reduced line height
   },
   headerStats: {
     alignItems: Platform.OS === 'web' ? 'flex-end' : 'center',
-    marginTop: Platform.OS === 'web' ? 0 : 16,
+    marginTop: Platform.OS === 'web' ? 0 : 12, // Reduced margin
   },
   bookingCount: {
     backgroundColor: "#10b981",
     color: "white",
-    fontSize: Platform.OS === 'web' ? 16 : 14,
+    fontSize: Platform.OS === 'web' ? 14 : 12, // Reduced font size
     fontWeight: "600",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 16, // Reduced padding
+    paddingVertical: 8, // Reduced padding
+    borderRadius: 16, // Reduced border radius
   },
   logo: {
-    width: Platform.OS === 'web' ? 80 : 60,
-    height: Platform.OS === 'web' ? 80 : 60,
+    width: Platform.OS === 'web' ? 60 : 50, // Reduced logo size
+    height: Platform.OS === 'web' ? 60 : 50, // Reduced logo size
     resizeMode: "contain",
   },
 
   // Filter Styles
   filterContainer: {
-    marginBottom: 24,
+    marginBottom: 20, // Reduced margin
     width: '100%',
   },
   filterScrollContent: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6, // Reduced padding
+    paddingVertical: 2, // Reduced padding
   },
   filterTab: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: "#fff",
-    borderRadius: 16,
-    paddingVertical: Platform.OS === 'web' ? 16 : 12,
-    paddingHorizontal: Platform.OS === 'web' ? 24 : 20,
-    marginHorizontal: 6,
-    minWidth: Platform.OS === 'web' ? 140 : 120,
+    borderRadius: 14, // Slightly reduced
+    paddingVertical: Platform.OS === 'web' ? 12 : 10, // Reduced padding
+    paddingHorizontal: Platform.OS === 'web' ? 20 : 16, // Reduced padding
+    marginHorizontal: 4, // Reduced margin
+    minWidth: Platform.OS === 'web' ? 120 : 100, // Reduced min width
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow
+    shadowOpacity: 0.04,
+    shadowRadius: 3, // Reduced shadow radius
+    elevation: 1, // Reduced elevation
     transition: 'all 0.2s ease-in-out',
     ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       ':hover': {
         transform: [{ scale: 1.02 }],
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.08,
       },
     }),
   },
   filterTabActive: {
     backgroundColor: "#065f46",
     shadowColor: "#065f46",
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
   },
   filterIcon: {
-    fontSize: Platform.OS === 'web' ? 18 : 16,
-    marginRight: 8,
+    fontSize: Platform.OS === 'web' ? 16 : 14, // Reduced font size
+    marginRight: 6, // Reduced margin
   },
   filterLabel: {
-    fontSize: Platform.OS === 'web' ? 15 : 14,
+    fontSize: Platform.OS === 'web' ? 14 : 13, // Reduced font size
     fontWeight: "600",
     color: "#6b7280",
   },
@@ -648,27 +648,27 @@ const styles = StyleSheet.create({
   activeIndicator: {
     position: 'absolute',
     bottom: -2,
-    width: 20,
-    height: 3,
+    width: 16, // Reduced width
+    height: 2, // Reduced height
     backgroundColor: "#10b981",
-    borderRadius: 2,
+    borderRadius: 1, // Reduced border radius
   },
 
   // Table Header
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#065f46",
-    paddingVertical: Platform.OS === 'web' ? 20 : 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 8,
+    paddingVertical: Platform.OS === 'web' ? 16 : 12, // Reduced padding
+    paddingHorizontal: 16, // Reduced padding
+    borderRadius: 10, // Reduced border radius
+    marginBottom: 6, // Reduced margin
     width: '100%',
   },
   columnHeader: {
-    fontSize: Platform.OS === 'web' ? 15 : 14,
+    fontSize: Platform.OS === 'web' ? 14 : 13, // Reduced font size
     fontWeight: "700",
     color: "#fff",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3, // Reduced letter spacing
   },
   serviceColumn: { flex: 3, textAlign: 'left' },
   datetimeColumn: { flex: 2, textAlign: 'center' },
@@ -679,23 +679,23 @@ const styles = StyleSheet.create({
   // Mobile Card
   mobileCard: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    marginVertical: 8,
+    borderRadius: 14, // Reduced border radius
+    padding: 16, // Reduced padding
+    marginVertical: 6, // Reduced margin
     marginHorizontal: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 }, // Reduced shadow
+    shadowOpacity: 0.08,
+    shadowRadius: 6, // Reduced shadow radius
+    elevation: 3, // Reduced elevation
     width: '100%',
     maxWidth: '100%',
     ...(Platform.OS === 'web' && {
       transition: 'all 0.2s ease-in-out',
       ':hover': {
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 6,
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        elevation: 4,
       },
     }),
   },
@@ -703,67 +703,67 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 16,
+    marginBottom: 12, // Reduced margin
     width: '100%',
   },
   serviceInfo: {
     flex: 1,
-    marginRight: 12,
+    marginRight: 10, // Reduced margin
   },
   mobileServiceName: {
-    fontSize: 18,
+    fontSize: 16, // Reduced font size
     fontWeight: "bold",
     color: "#111827",
-    marginBottom: 4,
+    marginBottom: 2, // Reduced margin
   },
   mobileServiceDuration: {
-    fontSize: 14,
+    fontSize: 13, // Reduced font size
     color: "#6b7280",
     fontWeight: '500',
   },
   mobileDetails: {
-    marginBottom: 16,
+    marginBottom: 12, // Reduced margin
     width: '100%',
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6, // Reduced margin
     width: '100%',
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 13, // Reduced font size
     color: "#6b7280",
     fontWeight: "500",
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: 13, // Reduced font size
     color: "#111827",
     fontWeight: "500",
     textAlign: "right",
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 10, // Reduced margin
   },
 
   // Desktop Card
   desktopCard: {
     backgroundColor: "#fff",
-    borderRadius: 12,
-    marginVertical: 6,
+    borderRadius: 10, // Reduced border radius
+    marginVertical: 4, // Reduced margin
     marginHorizontal: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow
+    shadowOpacity: 0.04,
+    shadowRadius: 4, // Reduced shadow radius
+    elevation: 1, // Reduced elevation
     width: '100%',
     ...(Platform.OS === 'web' && {
       transition: 'all 0.2s ease-in-out',
       ':hover': {
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 4,
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 2,
         transform: [{ translateY: -1 }],
       },
     }),
@@ -771,21 +771,21 @@ const styles = StyleSheet.create({
   desktopCardContent: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: Platform.OS === 'web' ? 24 : 20,
-    paddingHorizontal: 20,
+    paddingVertical: Platform.OS === 'web' ? 20 : 16, // Reduced padding
+    paddingHorizontal: 16, // Reduced padding
     width: '100%',
   },
   serviceSection: {
     flex: 3,
   },
   desktopServiceName: {
-    fontSize: Platform.OS === 'web' ? 17 : 16,
+    fontSize: Platform.OS === 'web' ? 16 : 15, // Reduced font size
     fontWeight: "600",
     color: "#111827",
-    marginBottom: 4,
+    marginBottom: 2, // Reduced margin
   },
   desktopServiceDetails: {
-    fontSize: Platform.OS === 'web' ? 14 : 13,
+    fontSize: Platform.OS === 'web' ? 13 : 12, // Reduced font size
     color: "#6b7280",
   },
   datetimeSection: {
@@ -793,13 +793,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateText: {
-    fontSize: Platform.OS === 'web' ? 15 : 14,
+    fontSize: Platform.OS === 'web' ? 14 : 13, // Reduced font size
     fontWeight: "500",
     color: "#111827",
-    marginBottom: 2,
+    marginBottom: 1, // Reduced margin
   },
   timeText: {
-    fontSize: Platform.OS === 'web' ? 14 : 13,
+    fontSize: Platform.OS === 'web' ? 13 : 12, // Reduced font size
     color: "#6b7280",
   },
   priceSection: {
@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priceText: {
-    fontSize: Platform.OS === 'web' ? 18 : 16,
+    fontSize: Platform.OS === 'web' ? 16 : 15, // Reduced font size
     fontWeight: "bold",
     color: "#059669",
   },
@@ -816,12 +816,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusBadge: {
-    paddingVertical: Platform.OS === 'web' ? 8 : 6,
-    paddingHorizontal: Platform.OS === 'web' ? 16 : 12,
-    borderRadius: 12,
+    paddingVertical: Platform.OS === 'web' ? 6 : 4, // Reduced padding
+    paddingHorizontal: Platform.OS === 'web' ? 12 : 10, // Reduced padding
+    borderRadius: 10, // Reduced border radius
   },
   statusText: {
-    fontSize: Platform.OS === 'web' ? 13 : 12,
+    fontSize: Platform.OS === 'web' ? 12 : 11, // Reduced font size
     fontWeight: "700",
     textAlign: "center",
   },
@@ -833,20 +833,20 @@ const styles = StyleSheet.create({
   // Buttons
   cancelButton: {
     backgroundColor: "#f59e0b",
-    paddingVertical: Platform.OS === 'web' ? 12 : 10,
-    paddingHorizontal: Platform.OS === 'web' ? 24 : 20,
-    borderRadius: 10,
+    paddingVertical: Platform.OS === 'web' ? 10 : 8, // Reduced padding
+    paddingHorizontal: Platform.OS === 'web' ? 20 : 16, // Reduced padding
+    borderRadius: 8, // Reduced border radius
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow
+    shadowOpacity: 0.08,
+    shadowRadius: 3, // Reduced shadow radius
+    elevation: 1, // Reduced elevation
     ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease-in-out',
       ':hover': {
         backgroundColor: "#e6900b",
-        transform: [{ scale: 1.05 }],
+        transform: [{ scale: 1.03 }], // Slightly reduced scale
       },
     }),
   },
@@ -856,12 +856,12 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: "white",
-    fontSize: Platform.OS === 'web' ? 15 : 14,
+    fontSize: Platform.OS === 'web' ? 14 : 13, // Reduced font size
     fontWeight: "600",
   },
   noActionText: {
     color: "#9ca3af",
-    fontSize: Platform.OS === 'web' ? 13 : 12,
+    fontSize: Platform.OS === 'web' ? 12 : 11, // Reduced font size
     fontStyle: "italic",
   },
 
@@ -869,43 +869,43 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: Platform.OS === 'web' ? 120 : 80,
-    paddingHorizontal: 20,
+    paddingVertical: Platform.OS === 'web' ? 80 : 60, // Reduced padding
+    paddingHorizontal: 16, // Reduced padding
     backgroundColor: "rgba(255, 255, 255, 0.8)",
-    borderRadius: 20,
-    marginTop: 20,
+    borderRadius: 16, // Reduced border radius
+    marginTop: 16, // Reduced margin
     width: '100%',
-    minHeight: 300,
+    minHeight: 250, // Reduced min height
   },
   emptyStateIcon: {
-    fontSize: Platform.OS === 'web' ? 80 : 64,
-    marginBottom: 24,
+    fontSize: Platform.OS === 'web' ? 60 : 48, // Reduced font size
+    marginBottom: 16, // Reduced margin
   },
   emptyStateTitle: {
-    fontSize: Platform.OS === 'web' ? 26 : 22,
+    fontSize: Platform.OS === 'web' ? 22 : 20, // Reduced font size
     fontWeight: "600",
     color: "#374151",
-    marginBottom: 12,
+    marginBottom: 8, // Reduced margin
     textAlign: "center",
   },
   emptyStateText: {
-    fontSize: Platform.OS === 'web' ? 18 : 16,
+    fontSize: Platform.OS === 'web' ? 16 : 14, // Reduced font size
     color: "#6b7280",
     textAlign: "center",
-    lineHeight: 24,
-    maxWidth: 400,
-    marginBottom: Platform.OS === 'web' ? 24 : 0,
+    lineHeight: 20, // Reduced line height
+    maxWidth: 350, // Slightly reduced max width
+    marginBottom: Platform.OS === 'web' ? 20 : 0, // Reduced margin
   },
   viewAllButton: {
     backgroundColor: "#10b981",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-    marginTop: 16,
+    paddingVertical: 10, // Reduced padding
+    paddingHorizontal: 20, // Reduced padding
+    borderRadius: 8, // Reduced border radius
+    marginTop: 12, // Reduced margin
   },
   viewAllButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 14, // Reduced font size
     fontWeight: "600",
   },
 });
