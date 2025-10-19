@@ -62,10 +62,10 @@ const Logo = ({ size = 'medium', style }: { size?: 'small' | 'medium' | 'large' 
   const isVerySmallScreen = width < BREAKPOINTS.xs;
   
   const sizes = {
-    small: isVerySmallScreen ? { width: 32, height: 32 } : { width: 40, height: 40 },
-    medium: isSmallScreen ? { width: 60, height: 60 } : { width: 80, height: 80 },
-    large: isSmallScreen ? { width: 80, height: 80 } : { width: 120, height: 120 },
-    xlarge: isSmallScreen ? { width: 100, height: 100 } : { width: 150, height: 150 }
+    small: isVerySmallScreen ? { width: 40, height: 40 } : { width: 48, height: 48 },
+    medium: isSmallScreen ? { width: 80, height: 80 } : { width: 100, height: 100 },
+    large: isSmallScreen ? { width: 100, height: 100 } : { width: 150, height: 150 },
+    xlarge: isSmallScreen ? { width: 120, height: 120 } : { width: 180, height: 180 }
   };
 
   return (
@@ -104,49 +104,57 @@ export default function WelcomeScreen() {
     isExtraLargeScreen: width >= BREAKPOINTS.lg,  // >= 1024px
   }), [width]);
 
-  // Enhanced responsive values with better scaling
+  // Enhanced responsive values with larger sizes
   const responsiveValues = useMemo(() => {
     const baseWidth = Math.min(width, 1200); // Cap at 1200px for very large screens
     
     return {
-      // Font sizes that scale smoothly across all devices
+      // Increased font sizes for better readability
       fontSize: (baseSize: number) => {
-        if (isVerySmallScreen) return baseSize * 0.7;
-        if (isSmallScreen) return baseSize * 0.8;
-        if (isMediumScreen) return baseSize * 0.9;
-        if (isLargeScreen) return baseSize;
-        return baseSize * 1.1;
+        if (isVerySmallScreen) return baseSize * 0.85;
+        if (isSmallScreen) return baseSize * 0.95;
+        if (isMediumScreen) return baseSize * 1.05;
+        if (isLargeScreen) return baseSize * 1.1;
+        return baseSize * 1.2;
       },
       
       // Spacing that adapts to screen size
       spacing: (baseSpacing: number) => {
-        if (isVerySmallScreen) return baseSpacing * 0.6;
-        if (isSmallScreen) return baseSpacing * 0.8;
-        if (isMediumScreen) return baseSpacing * 0.9;
-        return baseSpacing;
+        if (isVerySmallScreen) return baseSpacing * 0.8;
+        if (isSmallScreen) return baseSpacing * 0.9;
+        if (isMediumScreen) return baseSpacing * 1;
+        return baseSpacing * 1.1;
       },
       
       // Hero height that works on all devices
       heroHeight: Math.max(
-        isVerySmallScreen ? height * 0.7 : 
-        isSmallScreen ? height * 0.75 : 
-        isMediumScreen ? height * 0.8 : 
-        height * 0.85,
-        500
+        isVerySmallScreen ? height * 0.8 : 
+        isSmallScreen ? height * 0.85 : 
+        isMediumScreen ? height * 0.9 : 
+        height * 0.95,
+        600
       ),
       
       // Section padding that scales appropriately
       sectionPadding: {
-        vertical: isVerySmallScreen ? 30 : 
-                 isSmallScreen ? 40 : 
-                 isMediumScreen ? 50 : 60,
-        horizontal: isVerySmallScreen ? 16 : 
-                   isSmallScreen ? 20 : 
-                   isMediumScreen ? 24 : 32
+        vertical: isVerySmallScreen ? 40 : 
+                 isSmallScreen ? 50 : 
+                 isMediumScreen ? 60 : 70,
+        horizontal: isVerySmallScreen ? 20 : 
+                   isSmallScreen ? 24 : 
+                   isMediumScreen ? 28 : 36
       },
       
       // Container max width
-      containerMaxWidth: Math.min(width * 0.95, 1200),
+      containerMaxWidth: Math.min(width * 0.95, 1400),
+      
+      // Icon sizes
+      iconSize: (baseSize: number) => {
+        if (isVerySmallScreen) return baseSize * 0.9;
+        if (isSmallScreen) return baseSize * 1;
+        if (isMediumScreen) return baseSize * 1.1;
+        return baseSize * 1.2;
+      }
     };
   }, [width, height, isVerySmallScreen, isSmallScreen, isMediumScreen, isLargeScreen]);
 
@@ -213,7 +221,7 @@ export default function WelcomeScreen() {
     }
   ], []);
 
-  // Enhanced Header Component
+  // Enhanced Header Component with larger text
   const Header = () => (
     <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
       <SafeAreaView style={styles.headerSafeArea}>
@@ -221,7 +229,7 @@ export default function WelcomeScreen() {
           styles.headerContainer,
           { 
             paddingHorizontal: responsiveValues.sectionPadding.horizontal,
-            paddingVertical: responsiveValues.spacing(12)
+            paddingVertical: responsiveValues.spacing(16)
           }
         ]}>
           <View style={styles.brandContainer}>
@@ -230,13 +238,13 @@ export default function WelcomeScreen() {
               <View style={styles.brandTextContainer}>
                 <Text style={[
                   styles.brandName,
-                  { fontSize: responsiveValues.fontSize(18) }
+                  { fontSize: responsiveValues.fontSize(22) }
                 ]}>
                   Cleanlily Cleaners
                 </Text>
                 <Text style={[
                   styles.brandSubtitle,
-                  { fontSize: responsiveValues.fontSize(10) }
+                  { fontSize: responsiveValues.fontSize(14) }
                 ]}>
                   Professional Cleaners
                 </Text>
@@ -249,19 +257,19 @@ export default function WelcomeScreen() {
               style={[
                 styles.bookNowButton,
                 {
-                  paddingHorizontal: responsiveValues.spacing(16),
-                  paddingVertical: responsiveValues.spacing(8)
+                  paddingHorizontal: responsiveValues.spacing(20),
+                  paddingVertical: responsiveValues.spacing(12)
                 }
               ]}
               onPress={() => router.push('./auth/signin')}
             >
               <Text style={[
                 styles.bookNowText,
-                { fontSize: responsiveValues.fontSize(12) }
+                { fontSize: responsiveValues.fontSize(16) }
               ]}>
                 Sign In
               </Text>
-              <ArrowRight size={responsiveValues.fontSize(14)} color={COLORS.white} />
+              <ArrowRight size={responsiveValues.iconSize(18)} color={COLORS.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -269,7 +277,7 @@ export default function WelcomeScreen() {
     </Animated.View>
   );
 
-  // Enhanced Hero Section with full responsiveness
+  // Enhanced Hero Section with larger text and better scrollability
   const HeroSection = () => (
     <View style={styles.heroContainer}>
       <Animated.View style={{ transform: [{ scale: heroScale }] }}>
@@ -292,14 +300,14 @@ export default function WelcomeScreen() {
                 <View style={[
                   styles.premiumBadge,
                   {
-                    marginBottom: responsiveValues.spacing(30),
-                    paddingHorizontal: responsiveValues.spacing(16),
-                    paddingVertical: responsiveValues.spacing(8)
+                    marginBottom: responsiveValues.spacing(40),
+                    paddingHorizontal: responsiveValues.spacing(20),
+                    paddingVertical: responsiveValues.spacing(12)
                   }
                 ]}>
                   <Text style={[
                     styles.premiumBadgeText,
-                    { fontSize: responsiveValues.fontSize(12) }
+                    { fontSize: responsiveValues.fontSize(16) }
                   ]}>
                     Zimbabwe's Premier Cleaning Service
                   </Text>
@@ -308,21 +316,21 @@ export default function WelcomeScreen() {
                 {/* Company Logo and Name */}
                 <View style={[
                   styles.companyBranding,
-                  { marginBottom: responsiveValues.spacing(40) }
+                  { marginBottom: responsiveValues.spacing(50) }
                 ]}>
                   <Logo 
                     size={isSmallScreen ? "large" : "xlarge"} 
                     style={[
                       styles.heroLogo,
-                      { marginBottom: responsiveValues.spacing(20) }
+                      { marginBottom: responsiveValues.spacing(30) }
                     ]} 
                   />
                   <View style={styles.companyText}>
                     <Text style={[
                       styles.companyName,
                       { 
-                        fontSize: responsiveValues.fontSize(isSmallScreen ? 32 : 48),
-                        marginBottom: responsiveValues.spacing(12)
+                        fontSize: responsiveValues.fontSize(isSmallScreen ? 40 : 56),
+                        marginBottom: responsiveValues.spacing(16)
                       }
                     ]}>
                       Cleanlily Cleaners
@@ -330,8 +338,8 @@ export default function WelcomeScreen() {
                     <Text style={[
                       styles.companyTagline,
                       { 
-                        fontSize: responsiveValues.fontSize(isSmallScreen ? 16 : 20),
-                        lineHeight: responsiveValues.fontSize(isSmallScreen ? 22 : 28)
+                        fontSize: responsiveValues.fontSize(isSmallScreen ? 20 : 24),
+                        lineHeight: responsiveValues.fontSize(isSmallScreen ? 26 : 32)
                       }
                     ]}>
                       Professional Cleaning Services You Can Trust
@@ -343,10 +351,10 @@ export default function WelcomeScreen() {
                 <Text style={[
                   styles.heroDescription,
                   { 
-                    fontSize: responsiveValues.fontSize(isSmallScreen ? 14 : 18),
-                    lineHeight: responsiveValues.fontSize(isSmallScreen ? 20 : 28),
-                    marginBottom: responsiveValues.spacing(40),
-                    maxWidth: isSmallScreen ? '100%' : 650
+                    fontSize: responsiveValues.fontSize(isSmallScreen ? 18 : 22),
+                    lineHeight: responsiveValues.fontSize(isSmallScreen ? 24 : 32),
+                    marginBottom: responsiveValues.spacing(50),
+                    maxWidth: isSmallScreen ? '100%' : 700
                   }
                 ]}>
                   Experience the Cleanlily difference with our trained professionals,
@@ -359,9 +367,9 @@ export default function WelcomeScreen() {
                   style={[
                     styles.primaryButton,
                     {
-                      paddingVertical: responsiveValues.spacing(isSmallScreen ? 16 : 20),
-                      paddingHorizontal: responsiveValues.spacing(isSmallScreen ? 32 : 40),
-                      minWidth: isSmallScreen ? 200 : 250
+                      paddingVertical: responsiveValues.spacing(isSmallScreen ? 20 : 24),
+                      paddingHorizontal: responsiveValues.spacing(isSmallScreen ? 40 : 48),
+                      minWidth: isSmallScreen ? 240 : 280
                     }
                   ]}
                   onPress={() => router.push('./auth/signup')}
@@ -369,12 +377,12 @@ export default function WelcomeScreen() {
                 >
                   <Text style={[
                     styles.primaryButtonText,
-                    { fontSize: responsiveValues.fontSize(isSmallScreen ? 14 : 18) }
+                    { fontSize: responsiveValues.fontSize(isSmallScreen ? 18 : 22) }
                   ]}>
                     Book Cleaning Now
                   </Text>
                   <ArrowRight 
-                    size={responsiveValues.fontSize(isSmallScreen ? 18 : 24)} 
+                    size={responsiveValues.iconSize(isSmallScreen ? 22 : 28)} 
                     color={COLORS.white} 
                   />
                 </TouchableOpacity>
@@ -386,7 +394,7 @@ export default function WelcomeScreen() {
     </View>
   );
 
-  // Responsive Stats Section
+  // Responsive Stats Section with larger text
   const StatsSection = () => (
     <View style={[
       styles.statsSection,
@@ -403,30 +411,30 @@ export default function WelcomeScreen() {
           <View key={index} style={[
             styles.statItem,
             {
-              padding: responsiveValues.spacing(20),
-              minWidth: isSmallScreen ? 140 : 180,
-              margin: responsiveValues.spacing(8)
+              padding: responsiveValues.spacing(24),
+              minWidth: isSmallScreen ? 160 : 200,
+              margin: responsiveValues.spacing(12)
             }
           ]}>
             <View style={[
               styles.statIconContainer,
-              { padding: responsiveValues.spacing(14) }
+              { padding: responsiveValues.spacing(16) }
             ]}>
               <stat.Icon 
-                size={responsiveValues.fontSize(20)} 
+                size={responsiveValues.iconSize(24)} 
                 color={COLORS.primary} 
-                strokeWidth={2} 
+                strokeWidth={2.5} 
               />
             </View>
             <Text style={[
               styles.statNumber,
-              { fontSize: responsiveValues.fontSize(28) }
+              { fontSize: responsiveValues.fontSize(32) }
             ]}>
               {stat.number}
             </Text>
             <Text style={[
               styles.statLabel,
-              { fontSize: responsiveValues.fontSize(12) }
+              { fontSize: responsiveValues.fontSize(16) }
             ]}>
               {stat.label}
             </Text>
@@ -436,7 +444,7 @@ export default function WelcomeScreen() {
     </View>
   );
 
-  // Responsive Services Section
+  // Responsive Services Section with larger text
   const ServicesSection = () => (
     <View style={[
       styles.servicesSection,
@@ -452,13 +460,13 @@ export default function WelcomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={[
             styles.sectionSubtitle,
-            { fontSize: responsiveValues.fontSize(11) }
+            { fontSize: responsiveValues.fontSize(14) }
           ]}>
             WHAT WE OFFER
           </Text>
           <Text style={[
             styles.sectionTitle,
-            { fontSize: responsiveValues.fontSize(28) }
+            { fontSize: responsiveValues.fontSize(36) }
           ]}>
             Our Premium Services
           </Text>
@@ -467,57 +475,57 @@ export default function WelcomeScreen() {
 
         <View style={[
           styles.servicesGrid,
-          { gap: responsiveValues.spacing(24) }
+          { gap: responsiveValues.spacing(32) }
         ]}>
           {services.map((service, index) => (
             <View key={index} style={[
               styles.serviceCard,
               {
-                padding: responsiveValues.spacing(24),
-                minWidth: isSmallScreen ? 280 : 300,
+                padding: responsiveValues.spacing(32),
+                minWidth: isSmallScreen ? 320 : 350,
                 flex: isMediumScreen ? 1 : undefined,
                 width: isMediumScreen ? '100%' : '30%'
               }
             ]}>
               <View style={[
                 styles.serviceIconContainer,
-                { padding: responsiveValues.spacing(16) }
+                { padding: responsiveValues.spacing(20) }
               ]}>
                 <service.Icon 
-                  size={responsiveValues.fontSize(28)} 
+                  size={responsiveValues.iconSize(32)} 
                   color={COLORS.primary} 
-                  strokeWidth={2} 
+                  strokeWidth={2.5} 
                 />
               </View>
 
               <Text style={[
                 styles.serviceTitle,
-                { fontSize: responsiveValues.fontSize(18) }
+                { fontSize: responsiveValues.fontSize(24) }
               ]}>
                 {service.title}
               </Text>
 
               <Text style={[
                 styles.serviceDescription,
-                { fontSize: responsiveValues.fontSize(12) }
+                { fontSize: responsiveValues.fontSize(16) }
               ]}>
                 {service.description}
               </Text>
 
               <View style={[
                 styles.featuresList,
-                { gap: responsiveValues.spacing(10), marginBottom: responsiveValues.spacing(24) }
+                { gap: responsiveValues.spacing(12), marginBottom: responsiveValues.spacing(32) }
               ]}>
                 {service.features.map((feature, featureIndex) => (
                   <View key={featureIndex} style={styles.featureItem}>
                     <CheckCircle 
-                      size={responsiveValues.fontSize(14)} 
+                      size={responsiveValues.iconSize(18)} 
                       color={COLORS.primary} 
                       strokeWidth={2.5} 
                     />
                     <Text style={[
                       styles.featureText,
-                      { fontSize: responsiveValues.fontSize(12) }
+                      { fontSize: responsiveValues.fontSize(16) }
                     ]}>
                       {feature}
                     </Text>
@@ -529,8 +537,8 @@ export default function WelcomeScreen() {
                 style={[
                   styles.serviceButton,
                   {
-                    paddingVertical: responsiveValues.spacing(14),
-                    paddingHorizontal: responsiveValues.spacing(24)
+                    paddingVertical: responsiveValues.spacing(18),
+                    paddingHorizontal: responsiveValues.spacing(32)
                   }
                 ]}
                 onPress={() => router.push('./auth/signup')}
@@ -538,12 +546,12 @@ export default function WelcomeScreen() {
               >
                 <Text style={[
                   styles.serviceButtonText,
-                  { fontSize: responsiveValues.fontSize(13) }
+                  { fontSize: responsiveValues.fontSize(16) }
                 ]}>
                   Book Service
                 </Text>
                 <ArrowRight 
-                  size={responsiveValues.fontSize(16)} 
+                  size={responsiveValues.iconSize(20)} 
                   color={COLORS.white} 
                 />
               </TouchableOpacity>
@@ -554,7 +562,7 @@ export default function WelcomeScreen() {
     </View>
   );
 
-  // Responsive Features Section
+  // Responsive Features Section with larger text
   const FeaturesSection = () => (
     <View style={[
       styles.featuresSection,
@@ -570,13 +578,13 @@ export default function WelcomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={[
             styles.sectionSubtitle,
-            { fontSize: responsiveValues.fontSize(11) }
+            { fontSize: responsiveValues.fontSize(14) }
           ]}>
             WHY CHOOSE US
           </Text>
           <Text style={[
             styles.sectionTitle,
-            { fontSize: responsiveValues.fontSize(28) }
+            { fontSize: responsiveValues.fontSize(36) }
           ]}>
             The Cleanlily Difference
           </Text>
@@ -585,37 +593,37 @@ export default function WelcomeScreen() {
 
         <View style={[
           styles.featuresGrid,
-          { gap: responsiveValues.spacing(24) }
+          { gap: responsiveValues.spacing(32) }
         ]}>
           {features.map((feature, index) => (
             <View key={index} style={[
               styles.featureCard,
               {
-                padding: responsiveValues.spacing(24),
-                minWidth: isSmallScreen ? 280 : 300,
+                padding: responsiveValues.spacing(32),
+                minWidth: isSmallScreen ? 320 : 350,
                 flex: isMediumScreen ? 1 : undefined,
                 width: isMediumScreen ? '100%' : '45%'
               }
             ]}>
               <View style={[
                 styles.featureIconContainer,
-                { padding: responsiveValues.spacing(20) }
+                { padding: responsiveValues.spacing(24) }
               ]}>
                 <feature.Icon 
-                  size={responsiveValues.fontSize(24)} 
+                  size={responsiveValues.iconSize(28)} 
                   color={COLORS.white} 
-                  strokeWidth={2} 
+                  strokeWidth={2.5} 
                 />
               </View>
               <Text style={[
                 styles.featureTitle,
-                { fontSize: responsiveValues.fontSize(18) }
+                { fontSize: responsiveValues.fontSize(24) }
               ]}>
                 {feature.title}
               </Text>
               <Text style={[
                 styles.featureDescription,
-                { fontSize: responsiveValues.fontSize(12) }
+                { fontSize: responsiveValues.fontSize(16) }
               ]}>
                 {feature.description}
               </Text>
@@ -626,7 +634,7 @@ export default function WelcomeScreen() {
     </View>
   );
 
-  // Responsive CTA Section
+  // Responsive CTA Section with larger text
   const CTASection = () => (
     <View style={[
       styles.ctaSection,
@@ -642,7 +650,7 @@ export default function WelcomeScreen() {
         <View style={styles.ctaContent}>
           <Text style={[
             styles.ctaTitle,
-            { fontSize: responsiveValues.fontSize(isSmallScreen ? 28 : 40) }
+            { fontSize: responsiveValues.fontSize(isSmallScreen ? 36 : 48) }
           ]}>
             Ready for a{"\n"}
             <Text style={styles.ctaTitleHighlight}>Spotless Space?</Text>
@@ -650,8 +658,8 @@ export default function WelcomeScreen() {
           <Text style={[
             styles.ctaDescription,
             { 
-              fontSize: responsiveValues.fontSize(isSmallScreen ? 14 : 18),
-              marginBottom: responsiveValues.spacing(40)
+              fontSize: responsiveValues.fontSize(isSmallScreen ? 18 : 22),
+              marginBottom: responsiveValues.spacing(50)
             }
           ]}>
             Join thousands of satisfied customers who trust Cleanlily
@@ -661,7 +669,7 @@ export default function WelcomeScreen() {
           <View style={[
             styles.ctaButtons,
             { 
-              gap: responsiveValues.spacing(16),
+              gap: responsiveValues.spacing(20),
               flexDirection: isSmallScreen ? 'column' : 'row'
             }
           ]}>
@@ -669,8 +677,8 @@ export default function WelcomeScreen() {
               style={[
                 styles.ctaPrimaryButton,
                 {
-                  paddingVertical: responsiveValues.spacing(16),
-                  paddingHorizontal: responsiveValues.spacing(32)
+                  paddingVertical: responsiveValues.spacing(20),
+                  paddingHorizontal: responsiveValues.spacing(40)
                 }
               ]}
               onPress={() => router.push('./auth/signup')}
@@ -678,27 +686,27 @@ export default function WelcomeScreen() {
             >
               <Text style={[
                 styles.ctaPrimaryButtonText,
-                { fontSize: responsiveValues.fontSize(14) }
+                { fontSize: responsiveValues.fontSize(18) }
               ]}>
                 Get Started Today
               </Text>
-              <ArrowRight size={responsiveValues.fontSize(16)} color={COLORS.white} />
+              <ArrowRight size={responsiveValues.iconSize(20)} color={COLORS.white} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.ctaSecondaryButton,
                 {
-                  paddingVertical: responsiveValues.spacing(16),
-                  paddingHorizontal: responsiveValues.spacing(28)
+                  paddingVertical: responsiveValues.spacing(20),
+                  paddingHorizontal: responsiveValues.spacing(36)
                 }
               ]}
               onPress={() => router.push('tel:+263771234567')}
               activeOpacity={0.9}
             >
-              <Phone size={responsiveValues.fontSize(16)} color={COLORS.white} strokeWidth={2} />
+              <Phone size={responsiveValues.iconSize(20)} color={COLORS.white} strokeWidth={2.5} />
               <Text style={[
                 styles.ctaSecondaryButtonText,
-                { fontSize: responsiveValues.fontSize(14) }
+                { fontSize: responsiveValues.fontSize(18) }
               ]}>
                 +263242 332317/75
               </Text>
@@ -709,7 +717,7 @@ export default function WelcomeScreen() {
     </View>
   );
 
-  // Responsive Footer
+  // Responsive Footer with larger text
   const Footer = () => (
     <View style={[
       styles.footer,
@@ -725,7 +733,7 @@ export default function WelcomeScreen() {
         <View style={[
           styles.footerMain,
           { 
-            gap: responsiveValues.spacing(40),
+            gap: responsiveValues.spacing(50),
             flexDirection: isSmallScreen ? 'column' : 'row'
           }
         ]}>
@@ -733,13 +741,13 @@ export default function WelcomeScreen() {
             <Logo size="medium" style={styles.footerLogo} />
             <Text style={[
               styles.footerBrandName,
-              { fontSize: responsiveValues.fontSize(20) }
+              { fontSize: responsiveValues.fontSize(24) }
             ]}>
               Cleanlily Cleaners
             </Text>
             <Text style={[
               styles.footerTagline,
-              { fontSize: responsiveValues.fontSize(14) }
+              { fontSize: responsiveValues.fontSize(16) }
             ]}>
               Zimbabwe's most trusted cleaning service provider
             </Text>
@@ -748,14 +756,14 @@ export default function WelcomeScreen() {
           <View style={styles.footerLinks}>
             <Text style={[
               styles.footerHeading,
-              { fontSize: responsiveValues.fontSize(16) }
+              { fontSize: responsiveValues.fontSize(20) }
             ]}>
               Quick Links
             </Text>
             <TouchableOpacity onPress={() => router.push('/services')}>
               <Text style={[
                 styles.footerLink,
-                { fontSize: responsiveValues.fontSize(14) }
+                { fontSize: responsiveValues.fontSize(16) }
               ]}>
                 Our Services
               </Text>
@@ -763,7 +771,7 @@ export default function WelcomeScreen() {
             <TouchableOpacity onPress={() => router.push('/about')}>
               <Text style={[
                 styles.footerLink,
-                { fontSize: responsiveValues.fontSize(14) }
+                { fontSize: responsiveValues.fontSize(16) }
               ]}>
                 About Us
               </Text>
@@ -771,7 +779,7 @@ export default function WelcomeScreen() {
             <TouchableOpacity onPress={() => router.push('/contact')}>
               <Text style={[
                 styles.footerLink,
-                { fontSize: responsiveValues.fontSize(14) }
+                { fontSize: responsiveValues.fontSize(16) }
               ]}>
                 Contact
               </Text>
@@ -781,25 +789,25 @@ export default function WelcomeScreen() {
           <View style={styles.footerContact}>
             <Text style={[
               styles.footerHeading,
-              { fontSize: responsiveValues.fontSize(16) }
+              { fontSize: responsiveValues.fontSize(20) }
             ]}>
               Contact Info
             </Text>
             <Text style={[
               styles.footerContactText,
-              { fontSize: responsiveValues.fontSize(14) }
+              { fontSize: responsiveValues.fontSize(16) }
             ]}>
               Harare, Zimbabwe
             </Text>
             <Text style={[
               styles.footerContactText,
-              { fontSize: responsiveValues.fontSize(14) }
+              { fontSize: responsiveValues.fontSize(16) }
             ]}>
               +263242 332317/75
             </Text>
             <Text style={[
               styles.footerContactText,
-              { fontSize: responsiveValues.fontSize(14) }
+              { fontSize: responsiveValues.fontSize(16) }
             ]}>
               cleanlilyharare@gmail.com
             </Text>
@@ -809,7 +817,7 @@ export default function WelcomeScreen() {
         <View style={styles.footerBottom}>
           <Text style={[
             styles.footerCopyright,
-            { fontSize: responsiveValues.fontSize(12) }
+            { fontSize: responsiveValues.fontSize(14) }
           ]}>
             © 2025 Cleanlily Cleaners. All rights reserved.
           </Text>
@@ -830,6 +838,11 @@ export default function WelcomeScreen() {
           { useNativeDriver: true }
         )}
         scrollEventThrottle={16}
+        // Enhanced scrollability for zoom
+        minimumZoomScale={0.8}
+        maximumZoomScale={2.0}
+        bouncesZoom={true}
+        contentInsetAdjustmentBehavior="automatic"
       >
         <StatusBar style="light" />
 
@@ -851,9 +864,11 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
+    // Ensure content can expand beyond screen for zooming
+    minHeight: '100%',
   },
 
-  // Enhanced Header Styles
+  // Enhanced Header Styles with larger text
   header: {
     position: 'absolute',
     top: 0,
@@ -888,7 +903,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 60,
+    minHeight: 70,
   },
   brandContainer: {
     flex: 1,
@@ -948,7 +963,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Enhanced Hero Section
+  // Enhanced Hero Section with larger elements
   heroContainer: {
     backgroundColor: COLORS.primary,
   },
@@ -1066,7 +1081,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  // Stats Section
+  // Stats Section with larger elements
   statsSection: {
     backgroundColor: COLORS.offWhite,
   },
@@ -1119,7 +1134,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Services Section
+  // Services Section with larger elements
   servicesSection: {
     backgroundColor: COLORS.white,
   },
@@ -1240,7 +1255,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Features Section
+  // Features Section with larger elements
   featuresSection: {
     backgroundColor: COLORS.offWhite,
   },
@@ -1311,7 +1326,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
 
-  // CTA Section
+  // CTA Section with larger elements
   ctaSection: {
     backgroundColor: COLORS.primary,
   },
@@ -1390,7 +1405,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Footer
+  // Footer with larger elements
   footer: {
     backgroundColor: COLORS.secondary,
   },
