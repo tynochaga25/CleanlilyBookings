@@ -13,7 +13,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { 
+import {
   X, Calendar, Clock, MapPin, CreditCard, User, Mail, Phone, AlertCircle,
   Info, CheckCircle, Shield, Clock as ClockIcon, Home, Star, ChevronRight
 } from 'lucide-react-native';
@@ -105,12 +105,12 @@ const SERVICE_GUIDELINES = {
   }
 };
 
-// Web-compatible Date Picker Component
-const WebDatePicker = ({ 
-  value, 
-  onChange, 
-  minimumDate 
-}: { 
+// Web-compatible Date Picker Component - ENHANCED VERSION
+const WebDatePicker = ({
+  value,
+  onChange,
+  minimumDate
+}: {
   value: Date;
   onChange: (date: Date) => void;
   minimumDate: Date;
@@ -128,26 +128,50 @@ const WebDatePicker = ({
     return formatDateForInput(minimumDate);
   };
 
-  // For React Native Web, we'll use a styled input
+  const formatDisplayDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
-    <input
-      type="date"
-      value={formatDateForInput(value)}
-      min={getMinDate()}
-      onChange={handleDateChange}
-      style={{
-        width: '100%',
-        padding: '16px',
-        border: '2px solid #E5E7EB',
-        borderRadius: '12px',
-        fontSize: '16px',
-        backgroundColor: 'white',
-        color: '#111827',
-        outline: 'none',
-      }}
-      onFocus={(e) => e.target.style.borderColor = '#10B981'}
-      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-    />
+    <View style={styles.webDatePickerContainer}>
+      <View style={styles.datePickerWrapper}>
+        <View style={styles.dateIconContainer}>
+          <Calendar size={24} color="#10B981" />
+        </View>
+        <View style={styles.dateInputWrapper}>
+          <Text style={styles.dateLabel}>Selected Date</Text>
+          <input
+            type="date"
+            value={formatDateForInput(value)}
+            min={getMinDate()}
+            onChange={handleDateChange}
+            style={{
+              width: '100%',
+              padding: '16px 18px',
+              border: 'none',
+              borderRadius: '0',
+              fontSize: '17px',
+              backgroundColor: 'transparent',
+              color: '#111827',
+              outline: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+            }}
+          />
+        </View>
+      </View>
+      <View style={styles.selectedDateDisplay}>
+        <View style={styles.selectedDateIcon}>
+          <CheckCircle size={20} color="white" />
+        </View>
+        <Text style={styles.selectedDateText}>{formatDisplayDate(value)}</Text>
+      </View>
+    </View>
   );
 };
 
@@ -156,7 +180,7 @@ const checkForConflicts = async (serviceId: string, date: string, startTime: str
   try {
     const startDateTime = new Date(`${date}T${startTime}`);
     const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
-    
+
     const { data: existingBookings, error } = await supabase
       .from('bookings')
       .select(`
@@ -173,7 +197,7 @@ const checkForConflicts = async (serviceId: string, date: string, startTime: str
     const conflicts = existingBookings.filter(booking => {
       const bookingStart = new Date(`${booking.scheduled_date}T${booking.scheduled_time}`);
       const bookingEnd = new Date(bookingStart.getTime() + booking.services.duration * 60000);
-      
+
       return (
         (startDateTime >= bookingStart && startDateTime < bookingEnd) ||
         (endDateTime > bookingStart && endDateTime <= bookingEnd) ||
@@ -218,13 +242,13 @@ const findAvailableSlots = async (serviceId: string, date: string, duration: num
       const slotStartTime = new Date(`2000-01-01T${slotStart}`);
       const slotEndTime = new Date(slotStartTime.getTime() + duration * 60000);
       const slotEnd = slotEndTime.toTimeString().split(' ')[0];
-      
+
       let hasConflict = false;
-      
+
       for (const occupied of occupiedSlots) {
         const occupiedStart = new Date(`2000-01-01T${occupied.start}`);
         const occupiedEnd = new Date(`2000-01-01T${occupied.end}`);
-        
+
         if (
           (slotStartTime >= occupiedStart && slotStartTime < occupiedEnd) ||
           (slotEndTime > occupiedStart && slotEndTime <= occupiedEnd) ||
@@ -234,12 +258,12 @@ const findAvailableSlots = async (serviceId: string, date: string, duration: num
           break;
         }
       }
-      
+
       if (!hasConflict) {
         availableSlots.push(slotStart);
       }
     }
-    
+
     return availableSlots;
   } catch (error) {
     console.error('Error finding available slots:', error);
@@ -254,7 +278,7 @@ const sendBookingEmail = async (
   userProfile: UserProfile | null
 ) => {
   try {
-    const formattedDate = bookingData.scheduled_date 
+    const formattedDate = bookingData.scheduled_date
       ? new Date(bookingData.scheduled_date).toLocaleDateString('en-US', {
           weekday: 'long',
           year: 'numeric',
@@ -262,19 +286,19 @@ const sendBookingEmail = async (
           day: 'numeric'
         })
       : 'Not selected';
-    
+
     const formatTime = (time: string) => {
       const [hours, minutes] = time.split(':');
       const hour = parseInt(hours);
       return hour > 12 ? `${hour - 12}:${minutes} PM` : `${hour}:${minutes} AM`;
     };
-    
-    const formattedTime = bookingData.scheduled_time 
+
+    const formattedTime = bookingData.scheduled_time
       ? formatTime(bookingData.scheduled_time)
       : 'Not selected';
 
     const emailSubject = `Booking Request: ${service.name} on ${formattedDate}`;
-    
+
     const emailBody = `
 Dear Cleanlily Team,
 
@@ -309,7 +333,7 @@ ${userProfile?.full_name || 'Client'}
 
     const clientEmail = userProfile?.email || 'client@example.com';
     const mailtoLink = `mailto:cleanlilyharare@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}&cc=${encodeURIComponent(clientEmail)}`;
-    
+
     const canOpen = await Linking.canOpenURL(mailtoLink);
     if (canOpen) {
       await Linking.openURL(mailtoLink);
@@ -394,7 +418,7 @@ const BookingGuidelines = ({ service, currentStep }: { service: Service; current
         </View>
         <Text style={styles.guidelinesTitle}>Important Information</Text>
       </View>
-      
+
       {/* Step-specific instructions */}
       <View style={styles.stepInstructions}>
         <Text style={styles.stepInstructionsTitle}>{stepInstructions.title}</Text>
@@ -422,7 +446,7 @@ const BookingGuidelines = ({ service, currentStep }: { service: Service; current
             </View>
           ))}
         </View>
-        
+
         <View style={styles.guidelinesSection}>
           <Text style={styles.sectionLabel}>Preparation tips:</Text>
           {guidelines.preparation.map((tip, index) => (
@@ -506,7 +530,7 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
     const slots = await findAvailableSlots(service.id, bookingData.scheduled_date, service.duration);
     setAvailableSlots(slots);
     setCheckingAvailability(false);
-    
+
     if (bookingData.scheduled_time && !slots.includes(bookingData.scheduled_time)) {
       setHasConflict(true);
     } else {
@@ -519,7 +543,7 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
     if (Platform.OS === 'web') {
       return; // Web date picker handles this directly
     }
-    
+
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
@@ -539,7 +563,7 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
 
   const handleTimeSelect = async (time: string) => {
     setBookingData({ ...bookingData, scheduled_time: time });
-    
+
     const conflict = await checkForConflicts(service.id, bookingData.scheduled_date, time, service.duration);
     setHasConflict(conflict);
   };
@@ -579,15 +603,15 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
     }
 
     const conflict = await checkForConflicts(
-      service.id, 
-      bookingData.scheduled_date, 
-      bookingData.scheduled_time, 
+      service.id,
+      bookingData.scheduled_date,
+      bookingData.scheduled_time,
       service.duration
     );
-    
+
     if (conflict) {
       Alert.alert(
-        'Time Slot Taken', 
+        'Time Slot Taken',
         'This time slot was just booked by another customer. Please select a different time from the available options.',
         [{ text: 'OK' }]
       );
@@ -620,24 +644,24 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
 
       Alert.alert(
         'Booking Confirmed! 🎉',
-        `Thank you for booking ${service.name}! 
-        
+        `Thank you for booking ${service.name}!
+
 • We've sent a confirmation email
 • Our team will contact you within 24 hours
 • Please keep your phone accessible
-        
+
 We look forward to serving you!`,
         [
-          { 
-            text: 'Great!', 
-            onPress: () => onSuccess() 
+          {
+            text: 'Great!',
+            onPress: () => onSuccess()
           }
         ]
       );
     } catch (error: any) {
       console.error('Booking error:', error);
       Alert.alert(
-        'Booking Failed', 
+        'Booking Failed',
         error.message || 'Failed to create booking. Please check your connection and try again.'
       );
     } finally {
@@ -672,7 +696,7 @@ We look forward to serving you!`,
     }
 
     return (
-      <>
+      <View style={styles.datePickerContainer}>
         <TouchableOpacity
           style={styles.dateInput}
           onPress={() => setShowDatePicker(true)}
@@ -682,7 +706,7 @@ We look forward to serving you!`,
           </Text>
           <ChevronRight size={20} color="#9CA3AF" />
         </TouchableOpacity>
-        
+
         {showDatePicker && (
           <DateTimePicker
             value={selectedDate}
@@ -692,7 +716,7 @@ We look forward to serving you!`,
             minimumDate={new Date()}
           />
         )}
-      </>
+      </View>
     );
   };
 
@@ -712,7 +736,7 @@ We look forward to serving you!`,
           const isAvailable = availableSlots.includes(time);
           const isSelected = bookingData.scheduled_time === time;
           const isConflict = !isAvailable && isSelected;
-          
+
           return (
             <TouchableOpacity
               key={time}
@@ -769,7 +793,7 @@ We look forward to serving you!`,
         <Text style={styles.timeSlotsLabel}>
           <Clock size={18} color="#4B5563" /> Available Time Slots
         </Text>
-        
+
         {hasConflict && bookingData.scheduled_time && (
           <View style={styles.conflictAlert}>
             <AlertCircle size={20} color="#EF4444" />
@@ -797,9 +821,9 @@ We look forward to serving you!`,
             </View>
           </View>
         )}
-        
+
         {renderTimeSlots()}
-        
+
         <View style={styles.availabilityLegend}>
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, styles.legendAvailable]} />
@@ -877,35 +901,35 @@ We look forward to serving you!`,
 
       <View style={styles.bookingSummary}>
         <Text style={styles.summaryTitle}>Booking Summary</Text>
-        
+
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Date</Text>
           <Text style={styles.summaryValue}>
             {bookingData.scheduled_date ? formatDate(bookingData.scheduled_date) : 'Not selected'}
           </Text>
         </View>
-        
+
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Time</Text>
           <Text style={styles.summaryValue}>
             {bookingData.scheduled_time ? formatTime(bookingData.scheduled_time) : 'Not selected'}
           </Text>
         </View>
-        
+
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Address</Text>
           <Text style={styles.summaryValue}>{bookingData.address || 'Not provided'}</Text>
         </View>
-        
+
         {bookingData.special_instructions && (
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Instructions</Text>
             <Text style={styles.summaryValue}>{bookingData.special_instructions}</Text>
           </View>
         )}
-        
+
         <View style={styles.summaryDivider} />
-        
+
         <View style={styles.summaryTotal}>
           <Text style={styles.totalLabel}>Total Amount</Text>
           <Text style={styles.totalAmount}>${service.price}</Text>
@@ -930,8 +954,8 @@ We look forward to serving you!`,
         </View>
       )}
 
-      <TouchableOpacity 
-        style={[styles.confirmButton, loading && styles.confirmButtonDisabled]} 
+      <TouchableOpacity
+        style={[styles.confirmButton, loading && styles.confirmButtonDisabled]}
         onPress={handleBooking}
         disabled={loading}
       >
@@ -958,7 +982,7 @@ We look forward to serving you!`,
           <View style={styles.modalHeader}>
             <View style={styles.headerContent}>
               <Text style={styles.modalTitle}>Book {service.name}</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.guidelinesToggle}
                 onPress={() => setShowGuidelines(!showGuidelines)}
               >
@@ -1042,7 +1066,7 @@ We look forward to serving you!`,
                 <Text style={styles.backButtonText}>Back</Text>
               </TouchableOpacity>
             )}
-            
+
             {currentStep < 3 && (
               <TouchableOpacity
                 style={[styles.nextButton, (loading || hasConflict) && styles.nextButtonDisabled]}
@@ -1127,7 +1151,7 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: "#FFFFFF",
   },
-  
+
   // Guidelines Styles
   guidelinesContainer: {
     backgroundColor: '#F0F9FF',
@@ -1330,39 +1354,113 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
-  // Date & Time Styles
+  // Date & Time Styles - ENHANCED VERSION
   dateTimeContainer: {
     marginBottom: 20,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: '#374151',
-    marginBottom: 12,
+    marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+  // Web Date Picker Container - ENHANCED
+  webDatePickerContainer: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  datePickerWrapper: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    overflow: 'hidden',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  dateIconContainer: {
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRightWidth: 2,
+    borderRightColor: '#D1FAE5',
+  },
+  dateInputWrapper: {
+    flex: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+  },
+  dateLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  selectedDateDisplay: {
+    marginTop: 16,
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  selectedDateIcon: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 6,
+    borderRadius: 10,
+  },
+  selectedDateText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: 'white',
+    letterSpacing: 0.3,
+  },
+  // Date Picker Container for Native
+  datePickerContainer: {
+    alignSelf: 'flex-start',
+  },
   dateInput: {
     borderWidth: 2,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 14,
     backgroundColor: 'white',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minWidth: 240,
+    maxWidth: 280,
+    alignSelf: 'flex-start',
   },
   inputText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#111827',
     fontWeight: '500',
   },
   placeholderText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#9CA3AF',
   },
   timeSlotsLabel: {
