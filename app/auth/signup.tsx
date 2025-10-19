@@ -1,4 +1,16 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity, 
+  Alert, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView, 
+  Image,
+  Dimensions
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -7,6 +19,12 @@ import { ArrowLeft, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react-na
 import { supabase } from '../lib/supabase';
 
 const logo = require('../cleanlily.png');
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Responsive scaling
+const scale = (size: number) => Math.min((screenWidth / 375) * size, size * 1.3);
+const verticalScale = (size: number) => (screenHeight / 812) * size;
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -114,135 +132,148 @@ export default function SignUp() {
   return (
     <LinearGradient 
       colors={['#ECFDF5', '#D1FAE5']} 
-      style={{ flex: 1 }}
+      style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            
             {/* Header */}
             <View style={styles.header}>
               <TouchableOpacity 
                 onPress={() => router.back()} 
                 style={styles.backButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                accessibilityLabel="Go back"
               >
-                <ArrowLeft size={22} color="#059669" />
+                <ArrowLeft size={scale(22)} color="#059669" />
               </TouchableOpacity>
             </View>
 
-            {/* Content */}
-            <View style={styles.content}>
-              <Image 
-                source={logo} 
-                style={styles.logoImage} 
-                resizeMode="contain"
-                accessible
-                accessibilityLabel="Cleanlily Logo"
-              />
-              <Text style={styles.title} accessibilityRole="header">Create Account</Text>
-              <Text style={styles.subtitle}>Join Cleanlily Cleaners for professional cleaning services</Text>
+            {/* Main Content */}
+            <View style={styles.mainContent}>
+              
+              {/* Logo Section */}
+              <View style={styles.logoSection}>
+                <Image 
+                  source={logo} 
+                  style={styles.logo} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.title}>Create Account</Text>
+                <Text style={styles.subtitle}>Join Cleanlily Cleaners for professional cleaning services</Text>
+              </View>
 
-              {/* Form Fields */}
-              <View style={styles.formContainer}>
+              {/* Form Section */}
+              <View style={styles.formSection}>
+                
                 {/* Full Name */}
-                <View style={styles.inputWrapper}>
-                  <User size={20} color="#6B7280" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Full Name"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.fullName}
-                    onChangeText={(value) => handleInputChange('fullName', value)}
-                    autoCapitalize="words"
-                    accessibilityLabel="Full name input"
-                  />
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Full Name</Text>
+                  <View style={styles.inputContainer}>
+                    <User size={scale(20)} color="#6B7280" />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your full name"
+                      value={formData.fullName}
+                      onChangeText={(value) => handleInputChange('fullName', value)}
+                      autoCapitalize="words"
+                    />
+                  </View>
                 </View>
 
                 {/* Email */}
-                <View style={styles.inputWrapper}>
-                  <Mail size={20} color="#6B7280" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.email}
-                    onChangeText={(value) => handleInputChange('email', value)}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    accessibilityLabel="Email input"
-                  />
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Email</Text>
+                  <View style={styles.inputContainer}>
+                    <Mail size={scale(20)} color="#6B7280" />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChangeText={(value) => handleInputChange('email', value)}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
                 </View>
 
                 {/* Phone */}
-                <View style={styles.inputWrapper}>
-                  <Phone size={20} color="#6B7280" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Phone Number"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.phone}
-                    onChangeText={(value) => handleInputChange('phone', value)}
-                    keyboardType="phone-pad"
-                    accessibilityLabel="Phone number input"
-                  />
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Phone Number</Text>
+                  <View style={styles.inputContainer}>
+                    <Phone size={scale(20)} color="#6B7280" />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your phone number"
+                      value={formData.phone}
+                      onChangeText={(value) => handleInputChange('phone', value)}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
                 </View>
 
                 {/* Password */}
-                <View style={styles.inputWrapper}>
-                  <Lock size={20} color="#6B7280" />
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="Password"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.password}
-                    onChangeText={(value) => handleInputChange('password', value)}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    accessibilityLabel="Password input"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                    accessibilityLabel={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff size={20} color="#6B7280" /> : <Eye size={20} color="#6B7280" />}
-                  </TouchableOpacity>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Password</Text>
+                  <View style={styles.inputContainer}>
+                    <Lock size={scale(20)} color="#6B7280" />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Create a password"
+                      value={formData.password}
+                      onChangeText={(value) => handleInputChange('password', value)}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeButton}
+                    >
+                      {showPassword ? 
+                        <EyeOff size={scale(20)} color="#6B7280" /> : 
+                        <Eye size={scale(20)} color="#6B7280" />
+                      }
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Confirm Password */}
-                <View style={styles.inputWrapper}>
-                  <Lock size={20} color="#6B7280" />
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="Confirm Password"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.confirmPassword}
-                    onChangeText={(value) => handleInputChange('confirmPassword', value)}
-                    secureTextEntry={!showConfirmPassword}
-                    autoCapitalize="none"
-                    accessibilityLabel="Confirm password input"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={styles.eyeIcon}
-                    accessibilityLabel={showConfirmPassword ? "Hide password" : "Show password"}
-                  >
-                    {showConfirmPassword ? <EyeOff size={20} color="#6B7280" /> : <Eye size={20} color="#6B7280" />}
-                  </TouchableOpacity>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Confirm Password</Text>
+                  <View style={styles.inputContainer}>
+                    <Lock size={scale(20)} color="#6B7280" />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChangeText={(value) => handleInputChange('confirmPassword', value)}
+                      secureTextEntry={!showConfirmPassword}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={styles.eyeButton}
+                    >
+                      {showConfirmPassword ? 
+                        <EyeOff size={scale(20)} color="#6B7280" /> : 
+                        <Eye size={scale(20)} color="#6B7280" />
+                      }
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
 
-              {/* Password Hint */}
-              <Text style={styles.passwordHint}>Password must be at least 6 characters</Text>
+                {/* Password Hint */}
+                <Text style={styles.passwordHint}>
+                  Password must be at least 6 characters
+                </Text>
+
+              </View>
 
               {/* Terms */}
               <Text style={styles.termsText}>
@@ -253,28 +284,23 @@ export default function SignUp() {
 
               {/* Sign Up Button */}
               <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
+                style={[styles.signUpButton, loading && styles.buttonDisabled]}
                 onPress={handleSignUp}
                 disabled={loading}
-                accessibilityRole="button"
-                accessibilityLabel={loading ? "Creating account" : "Create account"}
               >
-                <Text style={styles.buttonText}>
+                <Text style={styles.signUpText}>
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </Text>
               </TouchableOpacity>
 
-              {/* Sign In Link */}
+              {/* Footer */}
               <View style={styles.footer}>
                 <Text style={styles.footerText}>Already have an account? </Text>
-                <TouchableOpacity 
-                  onPress={() => router.push('/auth/signin')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Sign in"
-                >
-                  <Text style={styles.footerLink}>Sign In</Text>
+                <TouchableOpacity onPress={() => router.push('/auth/signin')}>
+                  <Text style={styles.signInText}>Sign In</Text>
                 </TouchableOpacity>
               </View>
+
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -284,6 +310,9 @@ export default function SignUp() {
 }
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
@@ -294,116 +323,137 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: scale(20),
+    paddingTop: scale(10),
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ECFDF5',
+    width: scale(44),
+    height: scale(44),
+    borderRadius: scale(22),
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  content: {
+  mainContent: {
     flex: 1,
-    marginHorizontal: 20,
-    marginVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 20,
+    paddingHorizontal: scale(24),
+    justifyContent: 'space-between',
+    paddingBottom: verticalScale(40),
   },
-  logoImage: {
-    width: 100,
-    height: 40,
-    resizeMode: 'contain',
-    marginBottom: 20,
+  logoSection: {
+    alignItems: 'center',
+    marginTop: verticalScale(20),
+    marginBottom: verticalScale(40),
+  },
+  logo: {
+    width: scale(120),
+    height: scale(50),
+    marginBottom: verticalScale(24),
   },
   title: {
-    fontSize: 26,
-    fontWeight: '700',
+    fontSize: scale(28),
+    fontWeight: '800',
     color: '#065F46',
-    marginBottom: 6,
+    marginBottom: scale(8),
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
-    color: '#6B7280',
-    marginBottom: 24,
+    fontSize: scale(16),
+    color: '#047857',
     textAlign: 'center',
+    lineHeight: scale(22),
   },
-  formContainer: {
+  formSection: {
     width: '100%',
-    marginBottom: 8,
+    marginBottom: verticalScale(20),
   },
-  inputWrapper: {
+  fieldContainer: {
+    marginBottom: scale(20),
+  },
+  fieldLabel: {
+    fontSize: scale(14),
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: scale(8),
+    marginLeft: scale(4),
+  },
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(249,250,251,0.9)',
+    backgroundColor: '#FFFFFF',
+    borderRadius: scale(12),
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(16),
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 16,
-    width: '100%',
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: '#111827',
-    marginLeft: 10,
+    fontSize: scale(16),
+    color: '#1F2937',
+    marginLeft: scale(12),
+    marginRight: scale(8),
   },
-  eyeIcon: {
-    padding: 4,
+  eyeButton: {
+    padding: scale(4),
   },
   passwordHint: {
-    fontSize: 12,
+    fontSize: scale(12),
     color: '#6B7280',
-    marginBottom: 16,
     textAlign: 'center',
+    marginTop: scale(-8),
+    marginBottom: scale(8),
   },
   termsText: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: '#6B7280',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: verticalScale(24),
+    lineHeight: scale(20),
   },
   termsLink: {
     color: '#059669',
     fontWeight: '600',
   },
-  button: {
+  signUpButton: {
     backgroundColor: '#065F46',
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: scale(16),
+    borderRadius: scale(12),
     alignItems: 'center',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: verticalScale(24),
     shadowColor: '#065F46',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 6,
   },
   buttonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
-  buttonText: {
-    fontSize: 16,
+  signUpText: {
+    fontSize: scale(16),
     fontWeight: '700',
-    color: '#fff',
+    color: '#FFFFFF',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   footerText: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: scale(14),
+    color: '#374151',
   },
-  footerLink: {
-    fontSize: 14,
+  signInText: {
+    fontSize: scale(14),
     color: '#065F46',
     fontWeight: '700',
+    marginLeft: scale(4),
   },
 });
