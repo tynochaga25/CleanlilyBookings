@@ -1,390 +1,844 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ImageBackground, 
-  ScrollView, 
-  Image, 
+import React, { useRef, useMemo } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+  ScrollView,
+  Image,
   useWindowDimensions,
-  SafeAreaView
+  SafeAreaView,
+  Animated,
+  Platform
 } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialIcons, FontAwesome5, Ionicons, Feather } from '@expo/vector-icons';
+import { Phone, CheckCircle, ArrowRight, Heart, Award, Star as StarIcon, Headphones, Home as HomeIcon, Briefcase, Sparkles, Shield, Leaf, Clock, Award as AwardIcon, CheckCircle2, Clock3 } from 'lucide-react-native';
 
-export default function WelcomeScreen() {
-  const { width, height } = useWindowDimensions();
-  
-  // Enhanced responsive breakpoints
-  const isSmallScreen = width < 768;
-  const isVerySmallScreen = width < 400;
-  const isLargeScreen = width > 1200;
-  const isTablet = width >= 768 && width <= 1200;
-  
-  // Responsive font size calculations
-  const getResponsiveFontSize = (baseSize, multiplier = 0.035) => {
-    return Math.max(baseSize * 0.8, Math.min(baseSize * 1.3, width * multiplier));
-  };
+const COLORS = {
+  primary: '#059669',
+  primaryDark: '#047857',
+  primaryLight: '#10b981',
+  secondary: '#1F2937',
+  accent: '#D1FAE5',
+  white: '#FFFFFF',
+  offWhite: '#F8FAFC',
+  black: '#000000',
+  gray: {
+    50: '#F9FAFB',
+    100: '#F3F4F6',
+    200: '#E5E7EB',
+    300: '#D1D5DB',
+    400: '#9CA3AF',
+    500: '#6B7280',
+    600: '#4B5563',
+    700: '#374151',
+    800: '#1F2937',
+    900: '#111827',
+  }
+};
 
-  // Responsive spacing
-  const getResponsiveSpacing = (baseSpacing) => {
-    return baseSpacing * (isLargeScreen ? 1.1 : isTablet ? 1 : 0.9);
+const BREAKPOINTS = {
+  xs: 320,    // Very small phones
+  sm: 480,    // Small phones
+  md: 768,    // Tablets
+  lg: 1024,   // Large tablets
+  xl: 1200,   // Small laptops
+};
+
+const ASSETS = {
+  logos: {
+    main: 'https://cleanlily.co.zw/wp-content/uploads/2024/04/Cleanlily-Cleaners-logo-png.png',
+  },
+  images: {
+    hero: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+  }
+};
+
+const Logo = ({ size = 'medium', style }: { size?: 'small' | 'medium' | 'large' | 'xlarge'; style?: any }) => {
+  const { width } = useWindowDimensions();
+  const isSmallScreen = width < BREAKPOINTS.sm;
+  const isVerySmallScreen = width < BREAKPOINTS.xs;
+  
+  const sizes = {
+    small: isVerySmallScreen ? { width: 32, height: 32 } : { width: 40, height: 40 },
+    medium: isSmallScreen ? { width: 60, height: 60 } : { width: 80, height: 80 },
+    large: isSmallScreen ? { width: 80, height: 80 } : { width: 120, height: 120 },
+    xlarge: isSmallScreen ? { width: 100, height: 100 } : { width: 150, height: 150 }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <StatusBar style="light" />
-        
-        {/* Hero Section - Full width green background */}
-        <View style={styles.heroContainer}>
-          <ImageBackground 
-            source={{ uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80' }}
-            style={[
-              styles.heroSection, 
-              { 
-                height: isLargeScreen ? height * 0.75 : isTablet ? height * 0.7 : Math.max(500, height * 0.65),
-              }
-            ]}
-            imageStyle={styles.heroImage}
-          >
-            <View style={styles.heroOverlay}>
-              {/* Logo and Branding */}
-              <View style={styles.logoContainer}>
-                <Image 
-                  source={{ uri: 'https://cleanlily.co.zw/wp-content/uploads/2024/04/Cleanlily-Cleaners-logo-png.png' }} 
-                  style={[
-                    styles.logoImage, 
-                    {
-                      width: isLargeScreen ? 120 : isTablet ? 100 : isVerySmallScreen ? 70 : 90,
-                      height: isLargeScreen ? 120 : isTablet ? 100 : isVerySmallScreen ? 70 : 90,
-                      marginBottom: getResponsiveSpacing(12)
-                    }
-                  ]}
-                  resizeMode="contain"
-                />
-                <Text 
-                  style={[
-                    styles.logoText,
-                    {
-                      fontSize: getResponsiveFontSize(28, 0.055),
-                      marginBottom: getResponsiveSpacing(6)
-                    }
-                  ]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
+    <Image
+      source={{ uri: ASSETS.logos.main }}
+      style={[sizes[size], style]}
+      resizeMode="contain"
+    />
+  );
+};
+
+export default function WelcomeScreen() {
+  const { width, height } = useWindowDimensions();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const { 
+    isVerySmallScreen, 
+    isSmallScreen, 
+    isMediumScreen, 
+    isLargeScreen, 
+    isExtraLargeScreen 
+  } = useMemo(() => ({
+    isVerySmallScreen: width < BREAKPOINTS.xs,    // < 320px
+    isSmallScreen: width < BREAKPOINTS.sm,        // < 480px
+    isMediumScreen: width < BREAKPOINTS.md,       // < 768px
+    isLargeScreen: width < BREAKPOINTS.lg,        // < 1024px
+    isExtraLargeScreen: width >= BREAKPOINTS.lg,  // >= 1024px
+  }), [width]);
+
+  // Enhanced responsive values with better scaling
+  const responsiveValues = useMemo(() => {
+    const baseWidth = Math.min(width, 1200); // Cap at 1200px for very large screens
+    
+    return {
+      // Font sizes that scale smoothly across all devices
+      fontSize: (baseSize: number) => {
+        if (isVerySmallScreen) return baseSize * 0.7;
+        if (isSmallScreen) return baseSize * 0.8;
+        if (isMediumScreen) return baseSize * 0.9;
+        if (isLargeScreen) return baseSize;
+        return baseSize * 1.1;
+      },
+      
+      // Spacing that adapts to screen size
+      spacing: (baseSpacing: number) => {
+        if (isVerySmallScreen) return baseSpacing * 0.6;
+        if (isSmallScreen) return baseSpacing * 0.8;
+        if (isMediumScreen) return baseSpacing * 0.9;
+        return baseSpacing;
+      },
+      
+      // Hero height that works on all devices
+      heroHeight: Math.max(
+        isVerySmallScreen ? height * 0.7 : 
+        isSmallScreen ? height * 0.75 : 
+        isMediumScreen ? height * 0.8 : 
+        height * 0.85,
+        500
+      ),
+      
+      // Section padding that scales appropriately
+      sectionPadding: {
+        vertical: isVerySmallScreen ? 30 : 
+                 isSmallScreen ? 40 : 
+                 isMediumScreen ? 50 : 60,
+        horizontal: isVerySmallScreen ? 16 : 
+                   isSmallScreen ? 20 : 
+                   isMediumScreen ? 24 : 32
+      },
+      
+      // Container max width
+      containerMaxWidth: Math.min(width * 0.95, 1200),
+    };
+  }, [width, height, isVerySmallScreen, isSmallScreen, isMediumScreen, isLargeScreen]);
+
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [0, 1],
+    extrapolate: 'clamp'
+  });
+
+  const heroScale = scrollY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [1.1, 1],
+    extrapolate: 'clamp'
+  });
+
+  const stats = useMemo(() => [
+    { number: '500+', label: 'Happy Clients', Icon: Heart },
+    { number: '15+', label: 'Years Experience', Icon: Award },
+    { number: '95%', label: 'Satisfaction Rate', Icon: StarIcon },
+    { number: '24/7', label: 'Customer Support', Icon: Headphones }
+  ], []);
+
+  const services = useMemo(() => [
+    {
+      Icon: HomeIcon,
+      title: "Residential Cleaning",
+      description: "Complete home cleaning with eco-friendly products and attention to detail",
+      features: ["Living Areas & Bedrooms", "Kitchen & Bathrooms", "Eco-Friendly Products", "Custom Requests"]
+    },
+    {
+      Icon: Briefcase,
+      title: "Commercial Cleaning",
+      description: "Professional workspace maintenance for businesses of all sizes",
+      features: ["Daily Office Maintenance", "Deep Sanitization", "Waste Management", "Flexible Scheduling"]
+    },
+    {
+      Icon: Sparkles,
+      title: "Deep Cleaning",
+      description: "Intensive cleaning for special occasions and thorough maintenance",
+      features: ["Move-in/Out Cleaning", "Seasonal Deep Clean", "Post-Renovation", "Premium Treatment"]
+    }
+  ], []);
+
+  const features = useMemo(() => [
+    {
+      Icon: Shield,
+      title: "Trusted Professionals",
+      description: "Background-checked, trained, and experienced cleaning specialists"
+    },
+    {
+      Icon: Leaf,
+      title: "Eco-Friendly",
+      description: "Environmentally safe, non-toxic cleaning solutions for your family"
+    },
+    {
+      Icon: Clock,
+      title: "Flexible Scheduling",
+      description: "Book at your convenience with 24/7 online scheduling"
+    },
+    {
+      Icon: AwardIcon,
+      title: "Satisfaction Guarantee",
+      description: "Not happy? We'll reclean until you're completely satisfied"
+    }
+  ], []);
+
+  // Enhanced Header Component
+  const Header = () => (
+    <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
+      <SafeAreaView style={styles.headerSafeArea}>
+        <View style={[
+          styles.headerContainer,
+          { 
+            paddingHorizontal: responsiveValues.sectionPadding.horizontal,
+            paddingVertical: responsiveValues.spacing(12)
+          }
+        ]}>
+          <View style={styles.brandContainer}>
+            <View style={styles.logoContainer}>
+              <Logo size="small" style={styles.logo} />
+              <View style={styles.brandTextContainer}>
+                <Text style={[
+                  styles.brandName,
+                  { fontSize: responsiveValues.fontSize(18) }
+                ]}>
                   Cleanlily Cleaners
                 </Text>
-                
                 <Text style={[
-                  styles.tagline,
-                  {
-                    fontSize: getResponsiveFontSize(16, 0.035),
-                    marginBottom: getResponsiveSpacing(16)
-                  }
+                  styles.brandSubtitle,
+                  { fontSize: responsiveValues.fontSize(10) }
                 ]}>
-                  Zimbabwe's Premier Cleaning Service
+                  Professional Cleaners
                 </Text>
-              </View>
-              
-              {/* Hero Content */}
-              <View style={styles.heroContent}>
-                <Text style={[
-                  styles.heroText,
-                  {
-                    fontSize: getResponsiveFontSize(14, 0.032),
-                    marginBottom: getResponsiveSpacing(30),
-                    lineHeight: getResponsiveFontSize(20, 0.04)
-                  }
-                ]}>
-                  Professional cleaning services for your home or office. 
-                  Experience the Cleanlily difference with our trained professionals 
-                  and eco-friendly cleaning products.
-                </Text>
-                
-                <View style={[
-                  styles.buttonContainer, 
-                  {
-                    flexDirection: isVerySmallScreen ? 'column' : 'row',
-                    gap: getResponsiveSpacing(12),
-                    maxWidth: isLargeScreen ? 500 : isTablet ? 450 : 380
-                  }
-                ]}>
-                  <TouchableOpacity
-                    style={[
-                      styles.primaryButton,
-                      {
-                        flex: isVerySmallScreen ? 0 : 1,
-                        minHeight: getResponsiveSpacing(52),
-                        paddingVertical: getResponsiveSpacing(14)
-                      }
-                    ]}
-                    onPress={() => router.push('./auth/signup')}
-                  >
-                    <Text style={[
-                      styles.primaryButtonText,
-                      { fontSize: getResponsiveFontSize(16, 0.034) }
-                    ]}>Book Now</Text>
-                    <Feather name="arrow-right" size={getResponsiveFontSize(18, 0.035)} color="#fff" style={styles.buttonIcon} />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.secondaryButton,
-                      {
-                        flex: isVerySmallScreen ? 0 : 1,
-                        minHeight: getResponsiveSpacing(52),
-                        paddingVertical: getResponsiveSpacing(14)
-                      }
-                    ]}
-                    onPress={() => router.push('./auth/signin')}
-                  >
-                    <Text style={[
-                      styles.secondaryButtonText,
-                      { fontSize: getResponsiveFontSize(16, 0.034) }
-                    ]}>Sign In</Text>
-                    <Feather name="log-in" size={getResponsiveFontSize(18, 0.035)} color="#059669" style={styles.buttonIcon} />
-                  </TouchableOpacity>
-                </View>
               </View>
             </View>
-          </ImageBackground>
-        </View>
-        
-        {/* Features Section */}
-        <View style={[
-          styles.featuresSection, 
-          { 
-            paddingHorizontal: getResponsiveSpacing(20),
-            paddingVertical: getResponsiveSpacing(30)
-          }
-        ]}>
-          <Text style={[
-            styles.sectionTitle,
-            {
-              fontSize: getResponsiveFontSize(24, 0.045),
-              marginBottom: getResponsiveSpacing(30)
-            }
-          ]}>
-            Why Choose Cleanlily?
-          </Text>
-          
-          <View style={[
-            styles.featuresGrid,
-            {
-              gap: getResponsiveSpacing(16)
-            }
-          ]}>
-            {[
-              {
-                icon: <FontAwesome5 name="user-shield" size={getResponsiveFontSize(22, 0.04)} color="#fff" />,
-                title: "Trusted Professionals",
-                text: "All our cleaners are thoroughly vetted and trained"
-              },
-              {
-                icon: <Ionicons name="leaf" size={getResponsiveFontSize(22, 0.04)} color="#fff" />,
-                title: "Eco-Friendly Products",
-                text: "We use environmentally safe cleaning solutions"
-              },
-              {
-                icon: <Feather name="clock" size={getResponsiveFontSize(22, 0.04)} color="#fff" />,
-                title: "Flexible Scheduling",
-                text: "Book at your convenience, including weekends"
-              },
-              {
-                icon: <MaterialIcons name="star" size={getResponsiveFontSize(22, 0.04)} color="#fff" />,
-                title: "Quality Guaranteed",
-                text: "Satisfaction guaranteed with every cleaning"
-              }
-            ].map((feature, index) => (
-              <View 
-                key={index}
-                style={[
-                  styles.featureCard,
-                  {
-                    width: isSmallScreen ? '100%' : '48%',
-                    padding: getResponsiveSpacing(20)
-                  }
-                ]}
-              >
-                <View style={[
-                  styles.featureIconContainer,
-                  {
-                    width: getResponsiveSpacing(60),
-                    height: getResponsiveSpacing(60),
-                    borderRadius: getResponsiveSpacing(30),
-                    marginBottom: getResponsiveSpacing(16)
-                  }
-                ]}>
-                  {feature.icon}
-                </View>
-                <Text style={[
-                  styles.featureTitle,
-                  { fontSize: getResponsiveFontSize(18, 0.038) }
-                ]}>
-                  {feature.title}
-                </Text>
-                <Text style={[
-                  styles.featureText,
-                  { 
-                    fontSize: getResponsiveFontSize(13, 0.028),
-                    lineHeight: getResponsiveFontSize(18, 0.035)
-                  }
-                ]}>
-                  {feature.text}
-                </Text>
-              </View>
-            ))}
           </View>
-        </View>
-        
-        {/* Services Preview */}
-        <View style={[
-          styles.servicesSection,
-          {
-            paddingHorizontal: getResponsiveSpacing(20),
-            paddingVertical: getResponsiveSpacing(30)
-          }
-        ]}>
-          <View style={styles.sectionHeader}>
-            <Text style={[
-              styles.sectionTitle,
-              {
-                fontSize: getResponsiveFontSize(24, 0.045)
-              }
-            ]}>
-              Our Services
-            </Text>
-            <TouchableOpacity onPress={() => router.push('./auth/signin')}>
+
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.bookNowButton,
+                {
+                  paddingHorizontal: responsiveValues.spacing(16),
+                  paddingVertical: responsiveValues.spacing(8)
+                }
+              ]}
+              onPress={() => router.push('./auth/signin')}
+            >
               <Text style={[
-                styles.viewAllText,
-                { fontSize: getResponsiveFontSize(15, 0.032) }
+                styles.bookNowText,
+                { fontSize: responsiveValues.fontSize(12) }
               ]}>
-                View All
+                Sign In
               </Text>
+              <ArrowRight size={responsiveValues.fontSize(14)} color={COLORS.white} />
             </TouchableOpacity>
           </View>
-          
-          <View style={[
-            styles.servicesRow,
-            {
-              flexDirection: width < 600 ? 'column' : 'row',
-              gap: getResponsiveSpacing(24)
-            }
-          ]}>
-            {[
-              {
-                icon: <Ionicons name="home" size={getResponsiveFontSize(24, 0.045)} color="#fff" />,
-                text: "Residential Cleaning",
-                bgStyle: styles.residentialBg
-              },
-              {
-                icon: <Ionicons name="business" size={getResponsiveFontSize(24, 0.045)} color="#fff" />,
-                text: "Office Cleaning",
-                bgStyle: styles.officeBg
-              },
-              {
-                icon: <MaterialIcons name="cleaning-services" size={getResponsiveFontSize(24, 0.045)} color="#fff" />,
-                text: "Deep Cleaning",
-                bgStyle: styles.deepCleanBg
-              }
-            ].map((service, index) => (
-              <View 
-                key={index}
-                style={[
-                  styles.serviceItem,
-                  {
-                    width: width < 600 ? '100%' : '30%'
-                  }
-                ]}
-              >
-                <View style={[
-                  styles.serviceIconContainer,
-                  service.bgStyle,
-                  {
-                    width: getResponsiveSpacing(80),
-                    height: getResponsiveSpacing(80),
-                    borderRadius: getResponsiveSpacing(40),
-                    marginBottom: getResponsiveSpacing(16)
-                  }
-                ]}>
-                  {service.icon}
-                </View>
-                <Text style={[
-                  styles.serviceText,
-                  { fontSize: getResponsiveFontSize(16, 0.035) }
-                ]}>
-                  {service.text}
-                </Text>
-              </View>
-            ))}
-          </View>
         </View>
-        
-        {/* CTA Section */}
-        <View style={[
-          styles.ctaSection, 
-          { 
-            height: isLargeScreen ? height * 0.45 : isTablet ? height * 0.4 : Math.max(300, height * 0.35) 
-          }
-        ]}>
-          <ImageBackground 
-            source={{ uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80' }}
-            style={styles.ctaBackground}
-            imageStyle={styles.ctaBackgroundImage}
-          >
-            <View style={styles.ctaOverlay}>
-              <View style={[
-                styles.ctaContent,
-                { maxWidth: isLargeScreen ? 500 : isTablet ? 450 : 350 }
-              ]}>
-                <Text style={[
-                  styles.ctaTitle,
+      </SafeAreaView>
+    </Animated.View>
+  );
+
+  // Enhanced Hero Section with full responsiveness
+  const HeroSection = () => (
+    <View style={styles.heroContainer}>
+      <Animated.View style={{ transform: [{ scale: heroScale }] }}>
+        <ImageBackground
+          source={{ uri: ASSETS.images.hero }}
+          style={[styles.heroSection, { height: responsiveValues.heroHeight }]}
+          imageStyle={styles.heroImage}
+        >
+          <View style={styles.heroOverlay}>
+            <View style={[
+              styles.heroContent,
+              { 
+                paddingHorizontal: responsiveValues.sectionPadding.horizontal,
+                maxWidth: responsiveValues.containerMaxWidth 
+              }
+            ]}>
+              <Animated.View style={[styles.centeredContent, { opacity: fadeAnim }]}>
+
+                {/* Premium Badge */}
+                <View style={[
+                  styles.premiumBadge,
                   {
-                    fontSize: getResponsiveFontSize(28, 0.055),
-                    marginBottom: getResponsiveSpacing(16)
+                    marginBottom: responsiveValues.spacing(30),
+                    paddingHorizontal: responsiveValues.spacing(16),
+                    paddingVertical: responsiveValues.spacing(8)
                   }
                 ]}>
-                  Ready for a Spotless Space?
-                </Text>
+                  <Text style={[
+                    styles.premiumBadgeText,
+                    { fontSize: responsiveValues.fontSize(12) }
+                  ]}>
+                    Zimbabwe's Premier Cleaning Service
+                  </Text>
+                </View>
+
+                {/* Company Logo and Name */}
+                <View style={[
+                  styles.companyBranding,
+                  { marginBottom: responsiveValues.spacing(40) }
+                ]}>
+                  <Logo 
+                    size={isSmallScreen ? "large" : "xlarge"} 
+                    style={[
+                      styles.heroLogo,
+                      { marginBottom: responsiveValues.spacing(20) }
+                    ]} 
+                  />
+                  <View style={styles.companyText}>
+                    <Text style={[
+                      styles.companyName,
+                      { 
+                        fontSize: responsiveValues.fontSize(isSmallScreen ? 32 : 48),
+                        marginBottom: responsiveValues.spacing(12)
+                      }
+                    ]}>
+                      Cleanlily Cleaners
+                    </Text>
+                    <Text style={[
+                      styles.companyTagline,
+                      { 
+                        fontSize: responsiveValues.fontSize(isSmallScreen ? 16 : 20),
+                        lineHeight: responsiveValues.fontSize(isSmallScreen ? 22 : 28)
+                      }
+                    ]}>
+                      Professional Cleaning Services You Can Trust
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Description */}
                 <Text style={[
-                  styles.ctaText,
-                  {
-                    fontSize: getResponsiveFontSize(16, 0.035),
-                    marginBottom: getResponsiveSpacing(28),
-                    lineHeight: getResponsiveFontSize(22, 0.045)
+                  styles.heroDescription,
+                  { 
+                    fontSize: responsiveValues.fontSize(isSmallScreen ? 14 : 18),
+                    lineHeight: responsiveValues.fontSize(isSmallScreen ? 20 : 28),
+                    marginBottom: responsiveValues.spacing(40),
+                    maxWidth: isSmallScreen ? '100%' : 650
                   }
                 ]}>
-                  Book your cleaning service today and enjoy a fresh, clean environment
+                  Experience the Cleanlily difference with our trained professionals,
+                  eco-friendly products, and guaranteed satisfaction. Transform your space
+                  into a spotless sanctuary today.
                 </Text>
+
+                {/* Single Centered Button */}
                 <TouchableOpacity
                   style={[
-                    styles.ctaButton,
+                    styles.primaryButton,
                     {
-                      paddingVertical: getResponsiveSpacing(16),
-                      minWidth: isLargeScreen ? 220 : isTablet ? 200 : 180
+                      paddingVertical: responsiveValues.spacing(isSmallScreen ? 16 : 20),
+                      paddingHorizontal: responsiveValues.spacing(isSmallScreen ? 32 : 40),
+                      minWidth: isSmallScreen ? 200 : 250
                     }
                   ]}
                   onPress={() => router.push('./auth/signup')}
+                  activeOpacity={0.9}
                 >
                   <Text style={[
-                    styles.ctaButtonText,
-                    { fontSize: getResponsiveFontSize(16, 0.035) }
+                    styles.primaryButtonText,
+                    { fontSize: responsiveValues.fontSize(isSmallScreen ? 14 : 18) }
                   ]}>
-                    Get Started
+                    Book Cleaning Now
                   </Text>
-                  <Feather name="arrow-right" size={getResponsiveFontSize(18, 0.035)} color="white" style={styles.buttonIcon} />
+                  <ArrowRight 
+                    size={responsiveValues.fontSize(isSmallScreen ? 18 : 24)} 
+                    color={COLORS.white} 
+                  />
                 </TouchableOpacity>
-              </View>
+              </Animated.View>
             </View>
-          </ImageBackground>
+          </View>
+        </ImageBackground>
+      </Animated.View>
+    </View>
+  );
+
+  // Responsive Stats Section
+  const StatsSection = () => (
+    <View style={[
+      styles.statsSection,
+      {
+        paddingVertical: responsiveValues.sectionPadding.vertical,
+        paddingHorizontal: responsiveValues.sectionPadding.horizontal
+      }
+    ]}>
+      <View style={[
+        styles.statsGrid,
+        { maxWidth: responsiveValues.containerMaxWidth }
+      ]}>
+        {stats.map((stat, index) => (
+          <View key={index} style={[
+            styles.statItem,
+            {
+              padding: responsiveValues.spacing(20),
+              minWidth: isSmallScreen ? 140 : 180,
+              margin: responsiveValues.spacing(8)
+            }
+          ]}>
+            <View style={[
+              styles.statIconContainer,
+              { padding: responsiveValues.spacing(14) }
+            ]}>
+              <stat.Icon 
+                size={responsiveValues.fontSize(20)} 
+                color={COLORS.primary} 
+                strokeWidth={2} 
+              />
+            </View>
+            <Text style={[
+              styles.statNumber,
+              { fontSize: responsiveValues.fontSize(28) }
+            ]}>
+              {stat.number}
+            </Text>
+            <Text style={[
+              styles.statLabel,
+              { fontSize: responsiveValues.fontSize(12) }
+            ]}>
+              {stat.label}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+
+  // Responsive Services Section
+  const ServicesSection = () => (
+    <View style={[
+      styles.servicesSection,
+      {
+        paddingVertical: responsiveValues.sectionPadding.vertical,
+        paddingHorizontal: responsiveValues.sectionPadding.horizontal
+      }
+    ]}>
+      <View style={[
+        styles.sectionContainer,
+        { maxWidth: responsiveValues.containerMaxWidth }
+      ]}>
+        <View style={styles.sectionHeader}>
+          <Text style={[
+            styles.sectionSubtitle,
+            { fontSize: responsiveValues.fontSize(11) }
+          ]}>
+            WHAT WE OFFER
+          </Text>
+          <Text style={[
+            styles.sectionTitle,
+            { fontSize: responsiveValues.fontSize(28) }
+          ]}>
+            Our Premium Services
+          </Text>
+          <View style={styles.titleDivider} />
         </View>
+
+        <View style={[
+          styles.servicesGrid,
+          { gap: responsiveValues.spacing(24) }
+        ]}>
+          {services.map((service, index) => (
+            <View key={index} style={[
+              styles.serviceCard,
+              {
+                padding: responsiveValues.spacing(24),
+                minWidth: isSmallScreen ? 280 : 300,
+                flex: isMediumScreen ? 1 : undefined,
+                width: isMediumScreen ? '100%' : '30%'
+              }
+            ]}>
+              <View style={[
+                styles.serviceIconContainer,
+                { padding: responsiveValues.spacing(16) }
+              ]}>
+                <service.Icon 
+                  size={responsiveValues.fontSize(28)} 
+                  color={COLORS.primary} 
+                  strokeWidth={2} 
+                />
+              </View>
+
+              <Text style={[
+                styles.serviceTitle,
+                { fontSize: responsiveValues.fontSize(18) }
+              ]}>
+                {service.title}
+              </Text>
+
+              <Text style={[
+                styles.serviceDescription,
+                { fontSize: responsiveValues.fontSize(12) }
+              ]}>
+                {service.description}
+              </Text>
+
+              <View style={[
+                styles.featuresList,
+                { gap: responsiveValues.spacing(10), marginBottom: responsiveValues.spacing(24) }
+              ]}>
+                {service.features.map((feature, featureIndex) => (
+                  <View key={featureIndex} style={styles.featureItem}>
+                    <CheckCircle 
+                      size={responsiveValues.fontSize(14)} 
+                      color={COLORS.primary} 
+                      strokeWidth={2.5} 
+                    />
+                    <Text style={[
+                      styles.featureText,
+                      { fontSize: responsiveValues.fontSize(12) }
+                    ]}>
+                      {feature}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.serviceButton,
+                  {
+                    paddingVertical: responsiveValues.spacing(14),
+                    paddingHorizontal: responsiveValues.spacing(24)
+                  }
+                ]}
+                onPress={() => router.push('./auth/signup')}
+                activeOpacity={0.9}
+              >
+                <Text style={[
+                  styles.serviceButtonText,
+                  { fontSize: responsiveValues.fontSize(13) }
+                ]}>
+                  Book Service
+                </Text>
+                <ArrowRight 
+                  size={responsiveValues.fontSize(16)} 
+                  color={COLORS.white} 
+                />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+
+  // Responsive Features Section
+  const FeaturesSection = () => (
+    <View style={[
+      styles.featuresSection,
+      {
+        paddingVertical: responsiveValues.sectionPadding.vertical,
+        paddingHorizontal: responsiveValues.sectionPadding.horizontal
+      }
+    ]}>
+      <View style={[
+        styles.sectionContainer,
+        { maxWidth: responsiveValues.containerMaxWidth }
+      ]}>
+        <View style={styles.sectionHeader}>
+          <Text style={[
+            styles.sectionSubtitle,
+            { fontSize: responsiveValues.fontSize(11) }
+          ]}>
+            WHY CHOOSE US
+          </Text>
+          <Text style={[
+            styles.sectionTitle,
+            { fontSize: responsiveValues.fontSize(28) }
+          ]}>
+            The Cleanlily Difference
+          </Text>
+          <View style={styles.titleDivider} />
+        </View>
+
+        <View style={[
+          styles.featuresGrid,
+          { gap: responsiveValues.spacing(24) }
+        ]}>
+          {features.map((feature, index) => (
+            <View key={index} style={[
+              styles.featureCard,
+              {
+                padding: responsiveValues.spacing(24),
+                minWidth: isSmallScreen ? 280 : 300,
+                flex: isMediumScreen ? 1 : undefined,
+                width: isMediumScreen ? '100%' : '45%'
+              }
+            ]}>
+              <View style={[
+                styles.featureIconContainer,
+                { padding: responsiveValues.spacing(20) }
+              ]}>
+                <feature.Icon 
+                  size={responsiveValues.fontSize(24)} 
+                  color={COLORS.white} 
+                  strokeWidth={2} 
+                />
+              </View>
+              <Text style={[
+                styles.featureTitle,
+                { fontSize: responsiveValues.fontSize(18) }
+              ]}>
+                {feature.title}
+              </Text>
+              <Text style={[
+                styles.featureDescription,
+                { fontSize: responsiveValues.fontSize(12) }
+              ]}>
+                {feature.description}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+
+  // Responsive CTA Section
+  const CTASection = () => (
+    <View style={[
+      styles.ctaSection,
+      {
+        paddingVertical: responsiveValues.sectionPadding.vertical,
+        paddingHorizontal: responsiveValues.sectionPadding.horizontal
+      }
+    ]}>
+      <View style={[
+        styles.ctaContainer,
+        { maxWidth: responsiveValues.containerMaxWidth }
+      ]}>
+        <View style={styles.ctaContent}>
+          <Text style={[
+            styles.ctaTitle,
+            { fontSize: responsiveValues.fontSize(isSmallScreen ? 28 : 40) }
+          ]}>
+            Ready for a{"\n"}
+            <Text style={styles.ctaTitleHighlight}>Spotless Space?</Text>
+          </Text>
+          <Text style={[
+            styles.ctaDescription,
+            { 
+              fontSize: responsiveValues.fontSize(isSmallScreen ? 14 : 18),
+              marginBottom: responsiveValues.spacing(40)
+            }
+          ]}>
+            Join thousands of satisfied customers who trust Cleanlily
+            for their cleaning needs. Book your first cleaning today
+            and get 15% off!
+          </Text>
+          <View style={[
+            styles.ctaButtons,
+            { 
+              gap: responsiveValues.spacing(16),
+              flexDirection: isSmallScreen ? 'column' : 'row'
+            }
+          ]}>
+            <TouchableOpacity
+              style={[
+                styles.ctaPrimaryButton,
+                {
+                  paddingVertical: responsiveValues.spacing(16),
+                  paddingHorizontal: responsiveValues.spacing(32)
+                }
+              ]}
+              onPress={() => router.push('./auth/signup')}
+              activeOpacity={0.9}
+            >
+              <Text style={[
+                styles.ctaPrimaryButtonText,
+                { fontSize: responsiveValues.fontSize(14) }
+              ]}>
+                Get Started Today
+              </Text>
+              <ArrowRight size={responsiveValues.fontSize(16)} color={COLORS.white} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.ctaSecondaryButton,
+                {
+                  paddingVertical: responsiveValues.spacing(16),
+                  paddingHorizontal: responsiveValues.spacing(28)
+                }
+              ]}
+              onPress={() => router.push('tel:+263771234567')}
+              activeOpacity={0.9}
+            >
+              <Phone size={responsiveValues.fontSize(16)} color={COLORS.white} strokeWidth={2} />
+              <Text style={[
+                styles.ctaSecondaryButtonText,
+                { fontSize: responsiveValues.fontSize(14) }
+              ]}>
+                +263242 332317/75
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  // Responsive Footer
+  const Footer = () => (
+    <View style={[
+      styles.footer,
+      {
+        paddingVertical: responsiveValues.sectionPadding.vertical,
+        paddingHorizontal: responsiveValues.sectionPadding.horizontal
+      }
+    ]}>
+      <View style={[
+        styles.footerContent,
+        { maxWidth: responsiveValues.containerMaxWidth }
+      ]}>
+        <View style={[
+          styles.footerMain,
+          { 
+            gap: responsiveValues.spacing(40),
+            flexDirection: isSmallScreen ? 'column' : 'row'
+          }
+        ]}>
+          <View style={styles.footerBrand}>
+            <Logo size="medium" style={styles.footerLogo} />
+            <Text style={[
+              styles.footerBrandName,
+              { fontSize: responsiveValues.fontSize(20) }
+            ]}>
+              Cleanlily Cleaners
+            </Text>
+            <Text style={[
+              styles.footerTagline,
+              { fontSize: responsiveValues.fontSize(14) }
+            ]}>
+              Zimbabwe's most trusted cleaning service provider
+            </Text>
+          </View>
+
+          <View style={styles.footerLinks}>
+            <Text style={[
+              styles.footerHeading,
+              { fontSize: responsiveValues.fontSize(16) }
+            ]}>
+              Quick Links
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/services')}>
+              <Text style={[
+                styles.footerLink,
+                { fontSize: responsiveValues.fontSize(14) }
+              ]}>
+                Our Services
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/about')}>
+              <Text style={[
+                styles.footerLink,
+                { fontSize: responsiveValues.fontSize(14) }
+              ]}>
+                About Us
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/contact')}>
+              <Text style={[
+                styles.footerLink,
+                { fontSize: responsiveValues.fontSize(14) }
+              ]}>
+                Contact
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footerContact}>
+            <Text style={[
+              styles.footerHeading,
+              { fontSize: responsiveValues.fontSize(16) }
+            ]}>
+              Contact Info
+            </Text>
+            <Text style={[
+              styles.footerContactText,
+              { fontSize: responsiveValues.fontSize(14) }
+            ]}>
+              Harare, Zimbabwe
+            </Text>
+            <Text style={[
+              styles.footerContactText,
+              { fontSize: responsiveValues.fontSize(14) }
+            ]}>
+              +263242 332317/75
+            </Text>
+            <Text style={[
+              styles.footerContactText,
+              { fontSize: responsiveValues.fontSize(14) }
+            ]}>
+              cleanlilyharare@gmail.com
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.footerBottom}>
+          <Text style={[
+            styles.footerCopyright,
+            { fontSize: responsiveValues.fontSize(12) }
+          ]}>
+            © 2025 Cleanlily Cleaners. All rights reserved.
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <Header />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+      >
+        <StatusBar style="light" />
+
+        <HeroSection />
+        <StatsSection />
+        <ServicesSection />
+        <FeaturesSection />
+        <CTASection />
+        <Footer />
       </ScrollView>
     </SafeAreaView>
   );
@@ -393,264 +847,611 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
   },
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: '#fff',
   },
+
+  // Enhanced Header Styles
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.white,
+    zIndex: 1000,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray[100],
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
+    }),
+  },
+  headerSafeArea: {
+    backgroundColor: COLORS.white,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 60,
+  },
+  brandContainer: {
+    flex: 1,
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  logo: {
+    borderRadius: 8,
+  },
+  brandTextContainer: {
+    flexDirection: 'column',
+  },
+  brandName: {
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: -0.5,
+  },
+  brandSubtitle: {
+    fontWeight: '600',
+    color: COLORS.gray[600],
+    letterSpacing: 0.5,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bookNowButton: {
+    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+    }),
+  },
+  bookNowText: {
+    color: COLORS.white,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+
+  // Enhanced Hero Section
   heroContainer: {
-    backgroundColor: '#059669', // Green background that covers full width
+    backgroundColor: COLORS.primary,
   },
   heroSection: {
     justifyContent: 'center',
-    minHeight: 500,
   },
   heroImage: {
     opacity: 0.9,
   },
   heroOverlay: {
-    backgroundColor: 'rgba(5, 150, 105, 0.85)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(5, 150, 105, 0.88)',
     height: '100%',
-    paddingVertical: 30,
-    paddingHorizontal: 16,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logoImage: {
-    // Dimensions are set dynamically
-  },
-  logoText: {
-    fontWeight: '800',
-    color: 'white',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
-    letterSpacing: 0.5,
-  },
-  tagline: {
-    color: 'rgba(255, 255, 255, 0.95)',
-    textAlign: 'center',
-    fontWeight: '600',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-    letterSpacing: 0.3,
+    justifyContent: 'center',
   },
   heroContent: {
+    alignSelf: 'center',
+    width: '100%',
+  },
+  centeredContent: {
     alignItems: 'center',
+    justifyContent: 'center',
     width: '100%',
   },
-  heroText: {
-    color: 'rgba(255, 255, 255, 0.95)',
+  premiumBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  premiumBadgeText: {
+    color: COLORS.accent,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
     textAlign: 'center',
-    fontWeight: '500',
-    paddingHorizontal: 10,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0.5, height: 0.5 },
-    textShadowRadius: 2,
   },
-  buttonContainer: {
-    width: '100%',
+  companyBranding: {
+    alignItems: 'center',
+  },
+  heroLogo: {
+    borderRadius: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+    }),
+  },
+  companyText: {
+    alignItems: 'center',
+  },
+  companyName: {
+    fontWeight: '800',
+    color: COLORS.white,
+    letterSpacing: -1,
+    textAlign: 'center',
+  },
+  companyTagline: {
+    fontWeight: '600',
+    color: COLORS.accent,
+    letterSpacing: 0.3,
+    textAlign: 'center',
+  },
+  heroDescription: {
+    color: 'rgba(255, 255, 255, 0.96)',
+    fontWeight: '500',
+    letterSpacing: 0.2,
+    textAlign: 'center',
   },
   primaryButton: {
-    backgroundColor: '#047857',
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    alignItems: 'center',
+    backgroundColor: COLORS.primaryDark,
+    borderRadius: 14,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    gap: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+      },
+    }),
   },
   primaryButtonText: {
-    color: 'white',
+    color: COLORS.white,
     fontWeight: '700',
-    marginRight: 8,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  secondaryButton: {
-    backgroundColor: 'white',
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    alignItems: 'center',
+
+  // Section Container
+  sectionContainer: {
+    alignSelf: 'center',
+    width: '100%',
+  },
+
+  // Stats Section
+  statsSection: {
+    backgroundColor: COLORS.offWhite,
+  },
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-    borderWidth: 2,
-    borderColor: 'rgba(5, 150, 105, 0.3)',
+    alignSelf: 'center',
+    width: '100%',
   },
-  secondaryButtonText: {
-    color: '#059669',
-    fontWeight: '700',
-    marginRight: 8,
-    letterSpacing: 0.8,
+  statItem: {
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.gray[100],
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+    }),
+  },
+  statIconContainer: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 14,
+    marginBottom: 16,
+  },
+  statNumber: {
+    fontWeight: '800',
+    color: COLORS.primary,
+    marginBottom: 8,
+    letterSpacing: -1,
+  },
+  statLabel: {
+    color: COLORS.gray[600],
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.2,
+  },
+
+  // Services Section
+  servicesSection: {
+    backgroundColor: COLORS.white,
+  },
+  sectionHeader: {
+    alignItems: 'center',
+    marginBottom: 48,
+  },
+  sectionSubtitle: {
+    color: COLORS.primary,
+    fontWeight: '800',
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
-  },
-  buttonIcon: {
-    marginLeft: 4,
-  },
-  featuresSection: {
-    backgroundColor: '#f8fafc',
+    marginBottom: 12,
   },
   sectionTitle: {
     fontWeight: '800',
-    color: '#1f2937',
+    color: COLORS.secondary,
     textAlign: 'center',
+    letterSpacing: -0.5,
+    marginBottom: 20,
+  },
+  titleDivider: {
+    width: 60,
+    height: 4,
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
+  },
+  servicesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  serviceCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.gray[100],
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+      },
+    }),
+  },
+  serviceIconContainer: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 16,
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+  },
+  serviceTitle: {
+    fontWeight: '700',
+    color: COLORS.secondary,
+    marginBottom: 12,
+    letterSpacing: -0.3,
+  },
+  serviceDescription: {
+    color: COLORS.gray[500],
+    fontWeight: '500',
+    lineHeight: 20,
+    marginBottom: 24,
+    letterSpacing: 0.1,
+  },
+  featuresList: {
+    marginBottom: 24,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  featureText: {
+    color: COLORS.gray[700],
+    fontWeight: '500',
+    letterSpacing: 0.1,
+    flex: 1,
+  },
+  serviceButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+    }),
+  },
+  serviceButtonText: {
+    color: COLORS.white,
+    fontWeight: '700',
     letterSpacing: 0.3,
+  },
+
+  // Features Section
+  featuresSection: {
+    backgroundColor: COLORS.offWhite,
   },
   featuresGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    width: '100%',
   },
   featureCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: COLORS.gray[100],
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+    }),
   },
   featureIconContainer: {
-    backgroundColor: '#059669',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: COLORS.primary,
+    borderRadius: 18,
+    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+      },
+    }),
   },
   featureTitle: {
     fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 8,
+    color: COLORS.secondary,
+    marginBottom: 12,
     textAlign: 'center',
-    letterSpacing: 0.3,
+    letterSpacing: -0.2,
   },
-  featureText: {
-    color: '#6b7280',
+  featureDescription: {
+    color: COLORS.gray[500],
     textAlign: 'center',
     fontWeight: '500',
+    lineHeight: 20,
+    letterSpacing: 0.1,
   },
-  servicesSection: {
-    backgroundColor: 'white',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  viewAllText: {
-    color: '#059669',
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  servicesRow: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  serviceItem: {
-    alignItems: 'center',
-  },
-  serviceIconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  residentialBg: {
-    backgroundColor: '#10b981',
-  },
-  officeBg: {
-    backgroundColor: '#059669',
-  },
-  deepCleanBg: {
-    backgroundColor: '#047857',
-  },
-  serviceText: {
-    fontWeight: '700',
-    color: '#374151',
-    textAlign: 'center',
-    letterSpacing: 0.3,
-  },
+
+  // CTA Section
   ctaSection: {
-    minHeight: 300,
+    backgroundColor: COLORS.primary,
   },
-  ctaBackground: {
-    flex: 1,
-  },
-  ctaBackgroundImage: {
-    opacity: 0.9,
-  },
-  ctaOverlay: {
-    backgroundColor: 'rgba(5, 150, 105, 0.88)',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 30,
+  ctaContainer: {
+    alignSelf: 'center',
+    width: '100%',
   },
   ctaContent: {
     alignItems: 'center',
+    textAlign: 'center',
   },
   ctaTitle: {
     fontWeight: '800',
-    color: 'white',
+    color: COLORS.white,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
-    letterSpacing: 0.5,
+    letterSpacing: -1,
+    marginBottom: 24,
+    lineHeight: 40,
   },
-  ctaText: {
-    color: 'rgba(255, 255, 255, 0.95)',
+  ctaTitleHighlight: {
+    color: COLORS.accent,
+  },
+  ctaDescription: {
+    color: 'rgba(255, 255, 255, 0.96)',
     textAlign: 'center',
     fontWeight: '500',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    lineHeight: 24,
+    letterSpacing: 0.2,
   },
-  ctaButton: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 28,
-    borderRadius: 16,
+  ctaButtons: {
     alignItems: 'center',
-    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  ctaButtonText: {
-    color: 'white',
+  ctaPrimaryButton: {
+    backgroundColor: COLORS.primaryDark,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+      },
+    }),
+  },
+  ctaPrimaryButtonText: {
+    color: COLORS.white,
     fontWeight: '700',
-    marginRight: 6,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
+  },
+  ctaSecondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 2,
+    borderColor: COLORS.white,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  ctaSecondaryButtonText: {
+    color: COLORS.white,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+
+  // Footer
+  footer: {
+    backgroundColor: COLORS.secondary,
+  },
+  footerContent: {
+    alignSelf: 'center',
+    width: '100%',
+  },
+  footerMain: {
+    marginBottom: 40,
+  },
+  footerBrand: {
+    minWidth: 280,
+  },
+  footerLogo: {
+    marginBottom: 16,
+  },
+  footerBrandName: {
+    color: COLORS.white,
+    fontWeight: '700',
+    marginBottom: 12,
+    letterSpacing: -0.3,
+  },
+  footerTagline: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '400',
+    lineHeight: 22,
+    letterSpacing: 0.1,
+  },
+  footerLinks: {
+    minWidth: 160,
+  },
+  footerHeading: {
+    color: COLORS.white,
+    fontWeight: '700',
+    marginBottom: 20,
+    letterSpacing: 0.2,
+  },
+  footerLink: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '500',
+    marginBottom: 12,
+    letterSpacing: 0.1,
+  },
+  footerContact: {
+    minWidth: 220,
+  },
+  footerContactText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '500',
+    marginBottom: 10,
+    letterSpacing: 0.1,
+  },
+  footerBottom: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+    paddingTop: 24,
+  },
+  footerCopyright: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center',
+    fontWeight: '500',
+    letterSpacing: 0.2,
   },
 });
