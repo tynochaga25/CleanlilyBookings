@@ -105,6 +105,211 @@ const SERVICE_GUIDELINES = {
   }
 };
 
+// Web-compatible alert function
+const showAlert = (title: string, message: string, buttons?: any[]) => {
+  if (Platform.OS === 'web') {
+    // Use browser's native alert for web
+    alert(`${title}\n\n${message}`);
+    // If there's a primary button, trigger its action
+    if (buttons && buttons[0] && buttons[0].onPress) {
+      setTimeout(() => buttons[0].onPress(), 100);
+    }
+  } else {
+    Alert.alert(title, message, buttons);
+  }
+};
+
+// Separate handler for web platform
+const handleWebEmail = async (subject: string, body: string, clientEmail: string) => {
+  try {
+    // Method 1: Direct mailto link
+    const mailtoLink = `mailto:cleanlilyharare@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}&cc=${encodeURIComponent(clientEmail)}`;
+    
+    // Try to open in new tab/window
+    const newWindow = window.open(mailtoLink, '_blank');
+    
+    if (newWindow) {
+      // Successfully opened
+      return true;
+    } else {
+      // Popup blocked, use alternative method
+      return await handleWebEmailAlternative(subject, body, clientEmail);
+    }
+  } catch (error) {
+    console.error('Web email method failed:', error);
+    return await handleWebEmailAlternative(subject, body, clientEmail);
+  }
+};
+
+// Alternative method for web when direct mailto fails
+const handleWebEmailAlternative = async (subject: string, body: string, clientEmail: string) => {
+  try {
+    // Create a temporary textarea to copy the email content
+    const textarea = document.createElement('textarea');
+    textarea.value = `To: cleanlilyharare@gmail.com\nSubject: ${subject}\nCC: ${clientEmail}\n\n${body}`;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    // Show detailed instructions
+    showAlert(
+      'Email Ready to Send',
+      `We've copied the booking details to your clipboard! 📋\n\nPlease:\n1. Open your email client\n2. Create a new email to: cleanlilyharare@gmail.com\n3. Paste the content (already copied)\n4. Send the email\n\nWe'll confirm your booking within 24 hours!`,
+      [
+        {
+          text: 'Open Gmail',
+          onPress: () => {
+            window.open('https://mail.google.com/mail/?view=cm&fs=1&tf=1', '_blank');
+          }
+        },
+        {
+          text: 'Open Outlook',
+          onPress: () => {
+            window.open('https://outlook.live.com/mail/0/compose', '_blank');
+          }
+        },
+        {
+          text: 'Got it, details copied!',
+          style: 'cancel'
+        }
+      ]
+    );
+    
+    return true;
+  } catch (error) {
+    console.error('Alternative email method failed:', error);
+    
+    // Final fallback - show the content directly
+    showAlert(
+      'Booking Details',
+      `Please send an email to cleanlilyharare@gmail.com with the following details:\n\nSUBJECT: ${subject}\n\nBODY:\n${body}\n\nCC: ${clientEmail}`,
+      [
+        {
+          text: 'Copy Details',
+          onPress: () => {
+            console.log('Email content:', body);
+            // You could also use a more robust clipboard solution here
+          }
+        },
+        { text: 'OK' }
+      ]
+    );
+    
+    return false;
+  }
+};
+
+// Mobile email handler (original logic)
+const handleMobileEmail = async (subject: string, body: string, clientEmail: string) => {
+  try {
+    const mailtoLink = `mailto:cleanlilyharare@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}&cc=${encodeURIComponent(clientEmail)}`;
+    
+    const canOpen = await Linking.canOpenURL(mailtoLink);
+    if (canOpen) {
+      await Linking.openURL(mailtoLink);
+      return true;
+    } else {
+      showAlert(
+        'Email Ready',
+        'Please copy the booking details and send them to cleanlilyharare@gmail.com',
+        [
+          {
+            text: 'Copy Details',
+            onPress: () => {
+              console.log('Email content:', body);
+            }
+          },
+          { text: 'OK' }
+        ]
+      );
+      return false;
+    }
+  } catch (error) {
+    console.error('Mobile email failed:', error);
+    return false;
+  }
+};
+
+// Function to send email notification - ENHANCED FOR WEB COMPATIBILITY
+const sendBookingEmail = async (
+  service: Service,
+  bookingData: any,
+  userProfile: UserProfile | null
+) => {
+  try {
+    const formattedDate = bookingData.scheduled_date
+      ? new Date(bookingData.scheduled_date).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : 'Not selected';
+
+    const formatTime = (time: string) => {
+      const [hours, minutes] = time.split(':');
+      const hour = parseInt(hours);
+      return hour > 12 ? `${hour - 12}:${minutes} PM` : `${hour}:${minutes} AM`;
+    };
+
+    const formattedTime = bookingData.scheduled_time
+      ? formatTime(bookingData.scheduled_time)
+      : 'Not selected';
+
+    const emailSubject = `Booking Request: ${service.name} on ${formattedDate}`;
+
+    const emailBody = `
+Dear Cleanlily Team,
+
+I would like to book the following service:
+
+SERVICE DETAILS:
+- Service: ${service.name}
+- Description: ${service.description}
+- Duration: ${service.duration} hours
+- Price: $${service.price}
+
+PREFERRED DATE & TIME:
+- Date: ${formattedDate}
+- Time: ${formattedTime}
+
+MY LOCATION:
+- Address: ${bookingData.address || 'Not provided'}
+
+SPECIAL INSTRUCTIONS:
+${bookingData.special_instructions || 'None'}
+
+PLEASE CONTACT ME AT:
+- Name: ${userProfile?.full_name || 'Not provided'}
+- Email: ${userProfile?.email || 'Not provided'}
+- Phone: ${userProfile?.phone || 'Not provided'}
+
+Please confirm this booking at your earliest convenience.
+
+Thank you,
+${userProfile?.full_name || 'Client'}
+    `.trim();
+
+    const clientEmail = userProfile?.email || 'client@example.com';
+    
+    // Enhanced web compatibility
+    if (Platform.OS === 'web') {
+      return await handleWebEmail(emailSubject, emailBody, clientEmail);
+    } else {
+      return await handleMobileEmail(emailSubject, emailBody, clientEmail);
+    }
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    showAlert(
+      'Email Error',
+      'Failed to prepare email. Please copy the booking details and send them to cleanlilyharare@gmail.com manually.',
+      [{ text: 'OK' }]
+    );
+    return false;
+  }
+};
+
 // Web-compatible Date Picker Component - ENHANCED VERSION
 const WebDatePicker = ({
   value,
@@ -268,95 +473,6 @@ const findAvailableSlots = async (serviceId: string, date: string, duration: num
   } catch (error) {
     console.error('Error finding available slots:', error);
     return timeSlots;
-  }
-};
-
-// Function to send email notification
-const sendBookingEmail = async (
-  service: Service,
-  bookingData: any,
-  userProfile: UserProfile | null
-) => {
-  try {
-    const formattedDate = bookingData.scheduled_date
-      ? new Date(bookingData.scheduled_date).toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
-      : 'Not selected';
-
-    const formatTime = (time: string) => {
-      const [hours, minutes] = time.split(':');
-      const hour = parseInt(hours);
-      return hour > 12 ? `${hour - 12}:${minutes} PM` : `${hour}:${minutes} AM`;
-    };
-
-    const formattedTime = bookingData.scheduled_time
-      ? formatTime(bookingData.scheduled_time)
-      : 'Not selected';
-
-    const emailSubject = `Booking Request: ${service.name} on ${formattedDate}`;
-
-    const emailBody = `
-Dear Cleanlily Team,
-
-I would like to book the following service:
-
-SERVICE DETAILS:
-- Service: ${service.name}
-- Description: ${service.description}
-- Duration: ${service.duration} hours
-- Price: $${service.price}
-
-PREFERRED DATE & TIME:
-- Date: ${formattedDate}
-- Time: ${formattedTime}
-
-MY LOCATION:
-- Address: ${bookingData.address || 'Not provided'}
-
-SPECIAL INSTRUCTIONS:
-${bookingData.special_instructions || 'None'}
-
-PLEASE CONTACT ME AT:
-- Name: ${userProfile?.full_name || 'Not provided'}
-- Email: ${userProfile?.email || 'Not provided'}
-- Phone: ${userProfile?.phone || 'Not provided'}
-
-Please confirm this booking at your earliest convenience.
-
-Thank you,
-${userProfile?.full_name || 'Client'}
-    `.trim();
-
-    const clientEmail = userProfile?.email || 'client@example.com';
-    const mailtoLink = `mailto:cleanlilyharare@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}&cc=${encodeURIComponent(clientEmail)}`;
-
-    const canOpen = await Linking.canOpenURL(mailtoLink);
-    if (canOpen) {
-      await Linking.openURL(mailtoLink);
-      return true;
-    } else {
-      Alert.alert(
-        'Email Ready',
-        'Please copy the booking details and send them to cleanlilyharare@gmail.com',
-        [
-          {
-            text: 'Copy Details',
-            onPress: () => {
-              console.log('Email content:', emailBody);
-            }
-          },
-          { text: 'OK' }
-        ]
-      );
-      return false;
-    }
-  } catch (error) {
-    console.error('Failed to send email:', error);
-    return false;
   }
 };
 
@@ -571,20 +687,20 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
   const handleNext = () => {
     if (currentStep === 1) {
       if (!bookingData.scheduled_date) {
-        Alert.alert('Date Required', 'Please select a date for your cleaning service');
+        showAlert('Date Required', 'Please select a date for your cleaning service');
         return;
       }
       if (!bookingData.scheduled_time) {
-        Alert.alert('Time Required', 'Please select a time slot for your booking');
+        showAlert('Time Required', 'Please select a time slot for your booking');
         return;
       }
       if (hasConflict) {
-        Alert.alert('Time Unavailable', 'The selected time is no longer available. Please choose another time slot from the available options.');
+        showAlert('Time Unavailable', 'The selected time is no longer available. Please choose another time slot from the available options.');
         return;
       }
     }
     if (currentStep === 2 && !bookingData.address) {
-      Alert.alert('Address Required', 'Please enter your complete address so we know where to provide the service');
+      showAlert('Address Required', 'Please enter your complete address so we know where to provide the service');
       return;
     }
     setCurrentStep(currentStep + 1);
@@ -598,7 +714,7 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
 
   const handleBooking = async () => {
     if (!userProfile) {
-      Alert.alert('Profile Required', 'Please complete your profile before booking');
+      showAlert('Profile Required', 'Please complete your profile before booking');
       return;
     }
 
@@ -610,7 +726,7 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
     );
 
     if (conflict) {
-      Alert.alert(
+      showAlert(
         'Time Slot Taken',
         'This time slot was just booked by another customer. Please select a different time from the available options.',
         [{ text: 'OK' }]
@@ -642,15 +758,9 @@ export default function BookingModal({ service, onClose, onSuccess }: BookingMod
 
       await sendBookingEmail(service, bookingData, userProfile);
 
-      Alert.alert(
+      showAlert(
         'Booking Confirmed! 🎉',
-        `Thank you for booking ${service.name}!
-
-• We've sent a confirmation email
-• Our team will contact you within 24 hours
-• Please keep your phone accessible
-
-We look forward to serving you!`,
+        `Thank you for booking ${service.name}!\n\n• We've sent a confirmation email\n• Our team will contact you within 24 hours\n• Please keep your phone accessible\n\nWe look forward to serving you!`,
         [
           {
             text: 'Great!',
@@ -660,7 +770,7 @@ We look forward to serving you!`,
       );
     } catch (error: any) {
       console.error('Booking error:', error);
-      Alert.alert(
+      showAlert(
         'Booking Failed',
         error.message || 'Failed to create booking. Please check your connection and try again.'
       );
