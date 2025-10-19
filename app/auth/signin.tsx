@@ -7,7 +7,9 @@ import {
   Alert, 
   KeyboardAvoidingView, 
   Platform, 
-  Image 
+  Image,
+  Dimensions,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +19,12 @@ import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 
 const logo = require('../cleanlily.png');
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Responsive scaling
+const scale = (size: number) => Math.min((screenWidth / 375) * size, size * 1.3);
+const verticalScale = (size: number) => (screenHeight / 812) * size;
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -62,93 +70,117 @@ export default function SignIn() {
   return (
     <LinearGradient 
       colors={['#ECFDF5', '#D1FAE5']} 
-      style={{ flex: 1 }}
+      style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
+          style={styles.keyboardAvoid}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <ArrowLeft size={22} color="#059669" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Content */}
-          <View style={styles.content}>
-            <Image source={logo} style={styles.logoImage} />
-            <Text style={styles.title}>Welcome Back 👋</Text>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
-
-            {/* Email Input */}
-            <View style={styles.inputWrapper}>
-              <Mail size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                placeholderTextColor="#9CA3AF"
-              />
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputWrapper}>
-              <Lock size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                placeholderTextColor="#9CA3AF"
-                onSubmitEditing={handleSignIn}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                {showPassword ? (
-                  <EyeOff size={20} color="#6B7280" />
-                ) : (
-                  <Eye size={20} color="#6B7280" />
-                )}
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            
+            {/* Header with Back Button */}
+            <View style={styles.header}>
+              <TouchableOpacity 
+                onPress={() => router.back()} 
+                style={styles.backButton}
+              >
+                <ArrowLeft size={scale(22)} color="#059669" />
               </TouchableOpacity>
             </View>
 
-            {/* Forgot Password */}
-            <TouchableOpacity 
-              onPress={() => router.push('/auth/forgot-password')}
-              disabled={loading}
-              style={{ alignSelf: 'flex-end', marginBottom: 16 }}
-            >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
+            {/* Main Content */}
+            <View style={styles.mainContent}>
+              
+              {/* Logo Section */}
+              <View style={styles.logoSection}>
+                <Image source={logo} style={styles.logo} />
+                <Text style={styles.title}>Welcome Back</Text>
+                <Text style={styles.subtitle}>Sign in to continue</Text>
+              </View>
 
-            {/* Sign In Button */}
-            <TouchableOpacity 
-              style={[styles.button, loading && { opacity: 0.7 }]}
-              onPress={handleSignIn}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Signing In...' : 'Sign In'}
-              </Text>
-            </TouchableOpacity>
+              {/* Form Section */}
+              <View style={styles.formSection}>
+                
+                {/* Email Field */}
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Email</Text>
+                  <View style={styles.inputContainer}>
+                    <Mail size={scale(20)} color="#6B7280" />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your email"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                    />
+                  </View>
+                </View>
 
-            {/* Sign Up Link */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/auth/signup')}>
-                <Text style={styles.footerLink}>Sign Up</Text>
-              </TouchableOpacity>
+                {/* Password Field */}
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Password</Text>
+                  <View style={styles.inputContainer}>
+                    <Lock size={scale(20)} color="#6B7280" />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoComplete="password"
+                    />
+                    <TouchableOpacity 
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeButton}
+                    >
+                      {showPassword ? (
+                        <EyeOff size={scale(20)} color="#6B7280" />
+                      ) : (
+                        <Eye size={scale(20)} color="#6B7280" />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Forgot Password */}
+                <TouchableOpacity 
+                  onPress={() => router.push('/auth/forgot-password')}
+                  style={styles.forgotPassword}
+                >
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
+
+                {/* Sign In Button */}
+                <TouchableOpacity 
+                  style={[styles.signInButton, loading && styles.buttonDisabled]}
+                  onPress={handleSignIn}
+                  disabled={loading}
+                >
+                  <Text style={styles.signInText}>
+                    {loading ? 'Signing In...' : 'Sign In'}
+                  </Text>
+                </TouchableOpacity>
+
+              </View>
+
+              {/* Footer */}
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Don't have an account? </Text>
+                <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+                  <Text style={styles.signUpText}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+
             </View>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -156,18 +188,27 @@ export default function SignIn() {
 }
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    padding: 20,
+  },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
-    marginBottom: 10,
+    paddingHorizontal: scale(20),
+    paddingTop: scale(10),
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    width: scale(44),
+    height: scale(44),
+    borderRadius: scale(22),
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -176,86 +217,109 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  content: {
+  mainContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 40,
+    paddingHorizontal: scale(24),
+    justifyContent: 'space-between',
+    paddingBottom: verticalScale(40),
   },
-  logoImage: {
-    width: 120,
-    height: 50,
-    resizeMode: 'contain',
-    marginBottom: 30,
+  logoSection: {
+    alignItems: 'center',
+    marginTop: verticalScale(20),
+    marginBottom: verticalScale(40),
+  },
+  logo: {
+    width: scale(120),
+    height: scale(50),
+    marginBottom: verticalScale(24),
   },
   title: {
-    fontSize: 28,
+    fontSize: scale(28),
     fontWeight: '800',
     color: '#065F46',
-    marginBottom: 8,
+    marginBottom: scale(8),
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: scale(16),
     color: '#047857',
-    marginBottom: 40,
     textAlign: 'center',
   },
-  inputWrapper: {
+  formSection: {
+    width: '100%',
+    marginBottom: verticalScale(30),
+  },
+  fieldContainer: {
+    marginBottom: scale(20),
+  },
+  fieldLabel: {
+    fontSize: scale(14),
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: scale(8),
+    marginLeft: scale(4),
+  },
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    borderRadius: scale(12),
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(16),
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: scale(16),
     color: '#1F2937',
-    marginLeft: 12,
+    marginLeft: scale(12),
+    marginRight: scale(8),
+  },
+  eyeButton: {
+    padding: scale(4),
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: scale(24),
   },
   forgotText: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: '#059669',
     fontWeight: '600',
   },
-  button: {
+  signInButton: {
     backgroundColor: '#065F46',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: scale(16),
+    borderRadius: scale(12),
     alignItems: 'center',
-    width: '100%',
-    marginBottom: 24,
     shadowColor: '#065F46',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 6,
   },
-  buttonText: {
-    fontSize: 16,
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  signInText: {
+    fontSize: scale(16),
     fontWeight: '700',
-    color: '#fff',
+    color: '#FFFFFF',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   footerText: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: '#374151',
   },
-  footerLink: {
-    fontSize: 14,
+  signUpText: {
+    fontSize: scale(14),
     color: '#065F46',
     fontWeight: '700',
+    marginLeft: scale(4),
   },
 });
