@@ -138,7 +138,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Enhanced Header */}
+      {/* Reduced Header Size */}
       <View style={[styles.header, isSmallScreen && styles.headerSmall]}>
         <View style={styles.headerContent}>
           <Image
@@ -151,7 +151,7 @@ export default function HomeScreen() {
             <Text 
               style={[
                 styles.headerTitle, 
-                { fontSize: fontSizes.xl5 },
+                { fontSize: fontSizes.xl4 },
                 isSmallScreen && styles.headerTitleSmall
               ]}
               accessibilityRole="header"
@@ -161,7 +161,7 @@ export default function HomeScreen() {
             <Text 
               style={[
                 styles.headerSubtitle, 
-                { fontSize: fontSizes.base },
+                { fontSize: fontSizes.sm },
                 isSmallScreen && styles.headerSubtitleSmall
               ]}
             >
@@ -403,13 +403,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
+  // Reduced Header Size
   header: {
     backgroundColor: '#047857',
-    paddingTop: 50,
+    paddingTop: 40, // Reduced from 50
     paddingHorizontal: 20,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingBottom: 20, // Reduced from 30
+    borderBottomLeftRadius: 24, // Reduced from 30
+    borderBottomRightRadius: 24, // Reduced from 30
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -417,21 +418,21 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   headerSmall: {
-    paddingTop: 40,
-    paddingBottom: 25,
+    paddingTop: 30, // Reduced from 40
+    paddingBottom: 16, // Reduced from 25
   },
   headerContent: {
     alignItems: 'center',
   },
   logo: { 
-    width: width * 0.3, 
-    height: width * 0.18, 
-    marginBottom: 15,
+    width: width * 0.25, // Reduced from 0.3
+    height: width * 0.15, // Reduced from 0.18
+    marginBottom: 12, // Reduced from 15
   },
   logoSmall: {
-    width: width * 0.25,
-    height: width * 0.15,
-    marginBottom: 12,
+    width: width * 0.2, // Reduced from 0.25
+    height: width * 0.12, // Reduced from 0.15
+    marginBottom: 8, // Reduced from 12
   },
   headerTextContainer: {
     alignItems: 'center',
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
   headerTitle: { 
     fontWeight: '800', 
     color: 'white', 
-    marginBottom: 8,
+    marginBottom: 6, // Reduced from 8
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
@@ -469,7 +470,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'white',
     marginHorizontal: 20,
-    marginTop: -20,
+    marginTop: -16, // Adjusted for smaller header
     borderRadius: 20,
     padding: 20,
     justifyContent: 'space-between',
@@ -484,7 +485,7 @@ const styles = StyleSheet.create({
   statsContainerSmall: {
     marginHorizontal: 16,
     padding: 16,
-    marginTop: -16,
+    marginTop: -12, // Adjusted for smaller header
   },
   statItem: { 
     flex: 1, 
@@ -503,7 +504,7 @@ const styles = StyleSheet.create({
   },
   section: { 
     paddingHorizontal: 20, 
-    paddingTop: 32,
+    paddingTop: 28, // Slightly reduced
   },
   sectionTitle: { 
     fontWeight: '800', 
