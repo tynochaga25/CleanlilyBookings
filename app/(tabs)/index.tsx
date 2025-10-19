@@ -11,33 +11,34 @@ import {
   Modal,
   useWindowDimensions,
 } from 'react-native';
-import { router } from 'po-router';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Clock } from 'lucide-react-native';
+import { Clock, Star, Users, Shield, Zap, Heart, Award } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 import BookingModal from '../components/BookingModal';
 
 const { width, height } = Dimensions.get('window');
 
-// Enhanced scaling function that respects device text size settings
-const scaleFont = (size: number, factor: number = 0.5) => {
-  const scale = Math.min(width / 375, 1.3); // Limit maximum scaling
+// Enhanced scaling function for better readability
+const scaleFont = (size: number, factor: number = 0.6) => {
+  const scale = Math.min(width / 375, 1.5); // Increased maximum scaling
   const newSize = size + (scale - 1) * size * factor;
   return Math.round(newSize);
 };
 
-// Accessibility-aware font sizes
+// Larger, more accessible font sizes
 const getFontSizes = () => {
-  const baseScale = Math.min(width / 375, 1.3);
+  const baseScale = Math.min(width / 375, 1.5);
   return {
-    xs: scaleFont(10, 0.3),
-    sm: scaleFont(12, 0.4),
-    base: scaleFont(14, 0.5),
-    lg: scaleFont(16, 0.5),
-    xl: scaleFont(18, 0.6),
-    xl2: scaleFont(20, 0.6),
-    xl3: scaleFont(22, 0.7),
-    xl4: scaleFont(24, 0.7),
+    xs: scaleFont(12, 0.4),    // Increased from 10
+    sm: scaleFont(14, 0.5),    // Increased from 12
+    base: scaleFont(16, 0.6),  // Increased from 14
+    lg: scaleFont(18, 0.6),    // Increased from 16
+    xl: scaleFont(20, 0.7),    // Increased from 18
+    xl2: scaleFont(22, 0.7),   // Increased from 20
+    xl3: scaleFont(26, 0.8),   // Increased from 22
+    xl4: scaleFont(28, 0.8),   // Increased from 24
+    xl5: scaleFont(32, 0.9),   // New larger size
   };
 };
 
@@ -111,7 +112,7 @@ export default function HomeScreen() {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color="#047857" />
-        <Text style={[styles.loadingText, { fontSize: fontSizes.base }]}>
+        <Text style={[styles.loadingText, { fontSize: fontSizes.lg }]}>
           Loading services...
         </Text>
       </View>
@@ -121,11 +122,11 @@ export default function HomeScreen() {
   if (error) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <Text style={[styles.errorText, { fontSize: fontSizes.base }]}>
+        <Text style={[styles.errorText, { fontSize: fontSizes.lg }]}>
           Error: {error}
         </Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchServices}>
-          <Text style={[styles.retryButtonText, { fontSize: fontSizes.sm }]}>
+          <Text style={[styles.retryButtonText, { fontSize: fontSizes.base }]}>
             Try Again
           </Text>
         </TouchableOpacity>
@@ -137,33 +138,37 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Header */}
+      {/* Enhanced Header */}
       <View style={[styles.header, isSmallScreen && styles.headerSmall]}>
-        <Image
-          source={require('../cleanlily.png')}
-          style={[styles.logo, isSmallScreen && styles.logoSmall]}
-          resizeMode="contain"
-          accessibilityLabel="Cleanlily Cleaners Logo"
-        />
-        <Text 
-          style={[
-            styles.headerTitle, 
-            { fontSize: fontSizes.xl3 },
-            isSmallScreen && styles.headerTitleSmall
-          ]}
-          accessibilityRole="header"
-        >
-          Cleanlily Cleaners
-        </Text>
-        <Text 
-          style={[
-            styles.headerSubtitle, 
-            { fontSize: fontSizes.sm },
-            isSmallScreen && styles.headerSubtitleSmall
-          ]}
-        >
-          Professional cleaning services, made simple
-        </Text>
+        <View style={styles.headerContent}>
+          <Image
+            source={require('../cleanlily.png')}
+            style={[styles.logo, isSmallScreen && styles.logoSmall]}
+            resizeMode="contain"
+            accessibilityLabel="Cleanlily Cleaners Logo"
+          />
+          <View style={styles.headerTextContainer}>
+            <Text 
+              style={[
+                styles.headerTitle, 
+                { fontSize: fontSizes.xl5 },
+                isSmallScreen && styles.headerTitleSmall
+              ]}
+              accessibilityRole="header"
+            >
+              Cleanlily Cleaners
+            </Text>
+            <Text 
+              style={[
+                styles.headerSubtitle, 
+                { fontSize: fontSizes.base },
+                isSmallScreen && styles.headerSubtitleSmall
+              ]}
+            >
+              Professional cleaning services, made simple
+            </Text>
+          </View>
+        </View>
       </View>
 
       <ScrollView
@@ -174,47 +179,50 @@ export default function HomeScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Stats */}
+        {/* Enhanced Stats Section */}
         <View style={[styles.statsContainer, isSmallScreen && styles.statsContainerSmall]}>
           <View style={styles.statItem}>
+            <Users size={fontSizes.xl2} color="#047857" />
             <Text 
-              style={[styles.statNumber, { fontSize: fontSizes.xl }]}
+              style={[styles.statNumber, { fontSize: fontSizes.xl2 }]}
               accessibilityLabel="500 plus Happy Customers"
             >
               500+
             </Text>
-            <Text style={[styles.statLabel, { fontSize: fontSizes.xs }]}>
+            <Text style={[styles.statLabel, { fontSize: fontSizes.sm }]}>
               Happy Customers
             </Text>
           </View>
           <View style={styles.statItem}>
+            <Star size={fontSizes.xl2} color="#047857" fill="#047857" />
             <Text 
-              style={[styles.statNumber, { fontSize: fontSizes.xl }]}
+              style={[styles.statNumber, { fontSize: fontSizes.xl2 }]}
               accessibilityLabel="4.9 star rating"
             >
               4.9
             </Text>
-            <Text style={[styles.statLabel, { fontSize: fontSizes.xs }]}>
-              ⭐ Rating
+            <Text style={[styles.statLabel, { fontSize: fontSizes.sm }]}>
+              Star Rating
             </Text>
           </View>
           <View style={styles.statItem}>
+            <Award size={fontSizes.xl2} color="#047857" />
             <Text 
-              style={[styles.statNumber, { fontSize: fontSizes.xl }]}
+              style={[styles.statNumber, { fontSize: fontSizes.xl2 }]}
               accessibilityLabel="1000 plus Cleanings Done"
             >
               1000+
             </Text>
-            <Text style={[styles.statLabel, { fontSize: fontSizes.xs }]}>
+            <Text style={[styles.statLabel, { fontSize: fontSizes.sm }]}>
               Cleanings Done
             </Text>
           </View>
         </View>
 
-        {/* Services Section */}
+        {/* Enhanced Services Section */}
         <View style={styles.section}>
           <Text 
-            style={[styles.sectionTitle, { fontSize: fontSizes.xl }]}
+            style={[styles.sectionTitle, { fontSize: fontSizes.xl3 }]}
             accessibilityRole="header"
           >
             Our Services
@@ -229,7 +237,7 @@ export default function HomeScreen() {
               <View style={styles.serviceHeader}>
                 <View style={styles.iconCircle}>
                   <Text 
-                    style={[styles.serviceIcon, { fontSize: fontSizes.xl2 }]}
+                    style={[styles.serviceIcon, { fontSize: fontSizes.xl3 }]}
                     accessibilityLabel={getServiceIcon(service.category)}
                   >
                     {getServiceIcon(service.category)}
@@ -237,39 +245,41 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.serviceInfo}>
                   <Text 
-                    style={[styles.serviceName, { fontSize: fontSizes.lg }]}
+                    style={[styles.serviceName, { fontSize: fontSizes.xl }]}
                     accessibilityRole="header"
                   >
                     {service.name}
                   </Text>
                   <Text 
-                    style={[styles.serviceDescription, { fontSize: fontSizes.sm }]} 
+                    style={[styles.serviceDescription, { fontSize: fontSizes.base }]} 
                     numberOfLines={2}
                   >
                     {service.description}
                   </Text>
-                  <Text style={[styles.serviceCategory, { fontSize: fontSizes.xs }]}>
-                    {service.category}
-                  </Text>
+                  <View style={styles.categoryBadge}>
+                    <Text style={[styles.serviceCategory, { fontSize: fontSizes.sm }]}>
+                      {service.category}
+                    </Text>
+                  </View>
                 </View>
               </View>
               
               <View style={styles.serviceDetails}>
                 <View style={styles.serviceMetrics}>
                   <Text 
-                    style={[styles.price, { fontSize: fontSizes.lg }]}
+                    style={[styles.price, { fontSize: fontSizes.xl }]}
                     accessibilityLabel={`Price $${service.price}`}
                   >
                     ${service.price}
                   </Text>
                   <View style={styles.metric}>
                     <Clock 
-                      size={isSmallScreen ? fontSizes.sm : fontSizes.base} 
+                      size={fontSizes.base} 
                       color="#047857" 
                       accessibilityLabel="Duration"
                     />
                     <Text 
-                      style={[styles.metricText, { fontSize: fontSizes.sm }]}
+                      style={[styles.metricText, { fontSize: fontSizes.base }]}
                       accessibilityLabel={`${service.duration} ${service.duration === 1 ? 'hour' : 'hours'}`}
                     >
                       {service.duration} {service.duration === 1 ? 'hour' : 'hours'}
@@ -283,7 +293,7 @@ export default function HomeScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Book ${service.name} service`}
                 >
-                  <Text style={[styles.bookButtonText, { fontSize: fontSizes.sm }]}>
+                  <Text style={[styles.bookButtonText, { fontSize: fontSizes.base }]}>
                     Book Now
                   </Text>
                 </TouchableOpacity>
@@ -292,10 +302,10 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Features */}
+        {/* Enhanced Features Section */}
         <View style={styles.section}>
           <Text 
-            style={[styles.sectionTitle, { fontSize: fontSizes.xl }]}
+            style={[styles.sectionTitle, { fontSize: fontSizes.xl3 }]}
             accessibilityRole="header"
           >
             Why Choose Us?
@@ -303,10 +313,10 @@ export default function HomeScreen() {
           
           <View style={styles.featuresGrid}>
             {[
-              { icon: '🛡️', title: 'Insured & Bonded', text: 'All our cleaners are fully insured' },
-              { icon: '⚡', title: 'Same Day Service', text: 'Book and get cleaned today' },
-              { icon: '💚', title: 'Eco-Friendly', text: 'Safe, non-toxic cleaning products' },
-              { icon: '💯', title: 'Satisfaction Guarantee', text: "Not happy? We'll make it right" },
+              { icon: <Shield size={fontSizes.xl2} color="#047857" />, title: 'Insured & Bonded', text: 'All our cleaners are fully insured' },
+              { icon: <Zap size={fontSizes.xl2} color="#047857" />, title: 'Same Day Service', text: 'Book and get cleaned today' },
+              { icon: <Heart size={fontSizes.xl2} color="#047857" />, title: 'Eco-Friendly', text: 'Safe, non-toxic cleaning products' },
+              { icon: <Award size={fontSizes.xl2} color="#047857" />, title: 'Satisfaction Guarantee', text: "Not happy? We'll make it right" },
             ].map((f, i) => (
               <View 
                 key={i} 
@@ -314,22 +324,17 @@ export default function HomeScreen() {
                 accessibilityRole="summary"
               >
                 <View style={styles.featureIconWrapper}>
-                  <Text 
-                    style={[styles.featureIcon, { fontSize: fontSizes.xl2 }]}
-                    accessibilityLabel={f.title}
-                  >
-                    {f.icon}
-                  </Text>
+                  {f.icon}
                 </View>
                 <Text 
-                  style={[styles.featureTitle, { fontSize: fontSizes.base }]}
+                  style={[styles.featureTitle, { fontSize: fontSizes.lg }]}
                   accessibilityRole="header"
                 >
                   {f.title}
                 </Text>
                 <Text 
-                  style={[styles.featureText, { fontSize: fontSizes.sm }]} 
-                  numberOfLines={2}
+                  style={[styles.featureText, { fontSize: fontSizes.base }]} 
+                  numberOfLines={3}
                 >
                   {f.text}
                 </Text>
@@ -372,199 +377,250 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: 20,
     color: '#6B7280',
+    fontWeight: '600',
   },
   errorText: {
     color: '#DC2626',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    fontWeight: '600',
   },
   retryButton: {
     backgroundColor: '#047857',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    shadowColor: '#047857',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   retryButtonText: {
     color: 'white',
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   header: {
     backgroundColor: '#047857',
-    paddingTop: 40,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
   },
   headerSmall: {
-    paddingTop: 30,
-    paddingBottom: 20,
+    paddingTop: 40,
+    paddingBottom: 25,
+  },
+  headerContent: {
+    alignItems: 'center',
   },
   logo: { 
-    width: width * 0.25, 
-    height: width * 0.15, 
-    marginBottom: 10 
+    width: width * 0.3, 
+    height: width * 0.18, 
+    marginBottom: 15,
   },
   logoSmall: {
-    width: width * 0.2,
-    height: width * 0.12,
-    marginBottom: 8,
+    width: width * 0.25,
+    height: width * 0.15,
+    marginBottom: 12,
+  },
+  headerTextContainer: {
+    alignItems: 'center',
   },
   headerTitle: { 
-    fontWeight: 'bold', 
+    fontWeight: '800', 
     color: 'white', 
-    marginBottom: 4,
+    marginBottom: 8,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    letterSpacing: 0.5,
   },
   headerTitleSmall: {
     // Size handled by dynamic font sizing
   },
   headerSubtitle: { 
-    color: 'rgba(255,255,255,0.85)', 
-    textAlign: 'center' 
+    color: 'rgba(255,255,255,0.95)', 
+    textAlign: 'center',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   headerSubtitleSmall: {
     // Size handled by dynamic font sizing
   },
   content: { flex: 1 },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 40,
   },
   scrollContentSmall: {
-    paddingBottom: 20,
+    paddingBottom: 30,
   },
   statsContainer: {
     flexDirection: 'row',
     backgroundColor: 'white',
     marginHorizontal: 20,
-    marginTop: -16,
-    borderRadius: 16,
-    padding: 16,
+    marginTop: -20,
+    borderRadius: 20,
+    padding: 20,
     justifyContent: 'space-between',
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(5, 150, 105, 0.1)',
   },
   statsContainerSmall: {
     marginHorizontal: 16,
-    padding: 12,
-    marginTop: -12,
+    padding: 16,
+    marginTop: -16,
   },
   statItem: { 
     flex: 1, 
-    alignItems: 'center' 
+    alignItems: 'center',
   },
   statNumber: { 
-    fontWeight: '700', 
-    color: '#047857' 
+    fontWeight: '800', 
+    color: '#047857',
+    marginTop: 8,
+    marginBottom: 4,
   },
   statLabel: { 
     color: '#6B7280', 
-    marginTop: 4,
+    fontWeight: '600',
     textAlign: 'center'
   },
   section: { 
     paddingHorizontal: 20, 
-    paddingTop: 28 
+    paddingTop: 32,
   },
   sectionTitle: { 
-    fontWeight: '700', 
+    fontWeight: '800', 
     color: '#1F2937', 
-    marginBottom: 16 
+    marginBottom: 20,
+    letterSpacing: 0.3,
   },
   serviceCard: {
     backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(5, 150, 105, 0.1)',
   },
   serviceCardSmall: {
-    padding: 12,
-    marginBottom: 12,
+    padding: 16,
+    marginBottom: 16,
   },
   serviceHeader: { 
     flexDirection: 'row', 
     alignItems: 'flex-start', 
-    marginBottom: 12 
+    marginBottom: 16,
   },
   iconCircle: {
     backgroundColor: '#ECFDF5',
-    borderRadius: 32,
-    padding: 8,
-    marginRight: 12,
-    width: 50,
-    height: 50,
+    borderRadius: 40,
+    padding: 12,
+    marginRight: 16,
+    width: 60,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#10B981',
   },
   serviceIcon: { 
     // Size handled by dynamic font sizing
   },
   serviceInfo: { 
-    flex: 1 
+    flex: 1,
   },
   serviceName: { 
-    fontWeight: '600', 
+    fontWeight: '700', 
     color: '#111827', 
-    marginBottom: 4 
+    marginBottom: 6,
+    letterSpacing: 0.3,
   },
   serviceDescription: { 
     color: '#6B7280', 
-    lineHeight: 18, 
-    marginBottom: 4 
+    lineHeight: 22, 
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  categoryBadge: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
   },
   serviceCategory: {
     color: '#059669',
-    fontWeight: '600',
+    fontWeight: '700',
     textTransform: 'capitalize',
   },
   serviceDetails: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    alignItems: 'center' 
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(5, 150, 105, 0.1)',
   },
   serviceMetrics: { 
-    flex: 1 
+    flex: 1,
   },
   price: { 
-    fontWeight: 'bold', 
+    fontWeight: '800', 
     color: '#047857', 
-    marginBottom: 4 
+    marginBottom: 6,
   },
   metric: { 
     flexDirection: 'row', 
-    alignItems: 'center' 
+    alignItems: 'center',
   },
   metricText: { 
     color: '#374151',
-    marginLeft: 4,
-    fontWeight: '500',
+    marginLeft: 6,
+    fontWeight: '600',
   },
   bookButton: {
     backgroundColor: '#047857',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 16,
     shadowColor: '#047857',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   bookButtonSmall: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
   },
   bookButtonText: { 
     color: 'white', 
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   featuresGrid: {
     flexDirection: 'row',
@@ -574,39 +630,43 @@ const styles = StyleSheet.create({
   feature: {
     backgroundColor: 'white',
     width: width * 0.43,
-    padding: 14,
-    borderRadius: 14,
+    padding: 20,
+    borderRadius: 20,
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(5, 150, 105, 0.1)',
   },
   featureSmall: {
     width: width * 0.44,
-    padding: 12,
-    marginBottom: 12,
+    padding: 16,
+    marginBottom: 14,
   },
   featureIconWrapper: {
     backgroundColor: '#ECFDF5',
-    borderRadius: 32,
-    padding: 10,
-    marginBottom: 8,
-  },
-  featureIcon: { 
-    // Size handled by dynamic font sizing
+    borderRadius: 40,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#10B981',
   },
   featureTitle: { 
-    fontWeight: '600', 
+    fontWeight: '700', 
     color: '#111827', 
-    marginBottom: 4, 
-    textAlign: 'center' 
+    marginBottom: 6, 
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   featureText: { 
     color: '#6B7280', 
     textAlign: 'center', 
-    lineHeight: 16 
+    lineHeight: 20,
+    fontWeight: '500',
   },
   modalContainer: {
     flex: 1,
