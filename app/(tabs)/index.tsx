@@ -11,14 +11,35 @@ import {
   Modal,
   useWindowDimensions,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router } from 'po-router';
 import { StatusBar } from 'expo-status-bar';
 import { Clock } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 import BookingModal from '../components/BookingModal';
 
 const { width, height } = Dimensions.get('window');
-const scaleFont = (size: number) => Math.min(size * (width / 375), size * 1.2); // Limit maximum scaling
+
+// Enhanced scaling function that respects device text size settings
+const scaleFont = (size: number, factor: number = 0.5) => {
+  const scale = Math.min(width / 375, 1.3); // Limit maximum scaling
+  const newSize = size + (scale - 1) * size * factor;
+  return Math.round(newSize);
+};
+
+// Accessibility-aware font sizes
+const getFontSizes = () => {
+  const baseScale = Math.min(width / 375, 1.3);
+  return {
+    xs: scaleFont(10, 0.3),
+    sm: scaleFont(12, 0.4),
+    base: scaleFont(14, 0.5),
+    lg: scaleFont(16, 0.5),
+    xl: scaleFont(18, 0.6),
+    xl2: scaleFont(20, 0.6),
+    xl3: scaleFont(22, 0.7),
+    xl4: scaleFont(24, 0.7),
+  };
+};
 
 interface Service {
   id: string;
@@ -39,6 +60,9 @@ export default function HomeScreen() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isSmallScreen = windowHeight < 700;
 
+  // Get dynamic font sizes
+  const fontSizes = getFontSizes();
+
   useEffect(() => {
     fetchServices();
   }, []);
@@ -52,12 +76,6 @@ export default function HomeScreen() {
 
       if (error) throw error;
       setServices(data || []);
-      
-      // Debug: Check if duration exists in the data
-      console.log('Services data:', data);
-      if (data && data.length > 0) {
-        console.log('First service duration:', data[0].duration);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load services');
     } finally {
@@ -93,7 +111,9 @@ export default function HomeScreen() {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color="#047857" />
-        <Text style={styles.loadingText}>Loading services...</Text>
+        <Text style={[styles.loadingText, { fontSize: fontSizes.base }]}>
+          Loading services...
+        </Text>
       </View>
     );
   }
@@ -101,9 +121,13 @@ export default function HomeScreen() {
   if (error) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <Text style={styles.errorText}>Error: {error}</Text>
+        <Text style={[styles.errorText, { fontSize: fontSizes.base }]}>
+          Error: {error}
+        </Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchServices}>
-          <Text style={styles.retryButtonText}>Try Again</Text>
+          <Text style={[styles.retryButtonText, { fontSize: fontSizes.sm }]}>
+            Try Again
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -113,66 +137,141 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Header - Reduced height */}
+      {/* Header */}
       <View style={[styles.header, isSmallScreen && styles.headerSmall]}>
         <Image
           source={require('../cleanlily.png')}
           style={[styles.logo, isSmallScreen && styles.logoSmall]}
           resizeMode="contain"
+          accessibilityLabel="Cleanlily Cleaners Logo"
         />
-        <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
+        <Text 
+          style={[
+            styles.headerTitle, 
+            { fontSize: fontSizes.xl3 },
+            isSmallScreen && styles.headerTitleSmall
+          ]}
+          accessibilityRole="header"
+        >
           Cleanlily Cleaners
         </Text>
-        <Text style={[styles.headerSubtitle, isSmallScreen && styles.headerSubtitleSmall]}>
+        <Text 
+          style={[
+            styles.headerSubtitle, 
+            { fontSize: fontSizes.sm },
+            isSmallScreen && styles.headerSubtitleSmall
+          ]}
+        >
           Professional cleaning services, made simple
         </Text>
       </View>
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={[styles.scrollContent, isSmallScreen && styles.scrollContentSmall]}
+        contentContainerStyle={[
+          styles.scrollContent, 
+          isSmallScreen && styles.scrollContentSmall
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Stats */}
         <View style={[styles.statsContainer, isSmallScreen && styles.statsContainerSmall]}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>500+</Text>
-            <Text style={styles.statLabel}>Happy Customers</Text>
+            <Text 
+              style={[styles.statNumber, { fontSize: fontSizes.xl }]}
+              accessibilityLabel="500 plus Happy Customers"
+            >
+              500+
+            </Text>
+            <Text style={[styles.statLabel, { fontSize: fontSizes.xs }]}>
+              Happy Customers
+            </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>4.9</Text>
-            <Text style={styles.statLabel}>⭐ Rating</Text>
+            <Text 
+              style={[styles.statNumber, { fontSize: fontSizes.xl }]}
+              accessibilityLabel="4.9 star rating"
+            >
+              4.9
+            </Text>
+            <Text style={[styles.statLabel, { fontSize: fontSizes.xs }]}>
+              ⭐ Rating
+            </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>1000+</Text>
-            <Text style={styles.statLabel}>Cleanings Done</Text>
+            <Text 
+              style={[styles.statNumber, { fontSize: fontSizes.xl }]}
+              accessibilityLabel="1000 plus Cleanings Done"
+            >
+              1000+
+            </Text>
+            <Text style={[styles.statLabel, { fontSize: fontSizes.xs }]}>
+              Cleanings Done
+            </Text>
           </View>
         </View>
 
         {/* Services Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Our Services</Text>
+          <Text 
+            style={[styles.sectionTitle, { fontSize: fontSizes.xl }]}
+            accessibilityRole="header"
+          >
+            Our Services
+          </Text>
           {services.map((service) => (
-            <View key={service.id} style={[styles.serviceCard, isSmallScreen && styles.serviceCardSmall]}>
+            <View 
+              key={service.id} 
+              style={[styles.serviceCard, isSmallScreen && styles.serviceCardSmall]}
+              accessibilityRole="button"
+              accessibilityLabel={`Book ${service.name} service for $${service.price}`}
+            >
               <View style={styles.serviceHeader}>
                 <View style={styles.iconCircle}>
-                  <Text style={styles.serviceIcon}>{getServiceIcon(service.category)}</Text>
+                  <Text 
+                    style={[styles.serviceIcon, { fontSize: fontSizes.xl2 }]}
+                    accessibilityLabel={getServiceIcon(service.category)}
+                  >
+                    {getServiceIcon(service.category)}
+                  </Text>
                 </View>
                 <View style={styles.serviceInfo}>
-                  <Text style={styles.serviceName}>{service.name}</Text>
-                  <Text style={styles.serviceDescription} numberOfLines={2}>
+                  <Text 
+                    style={[styles.serviceName, { fontSize: fontSizes.lg }]}
+                    accessibilityRole="header"
+                  >
+                    {service.name}
+                  </Text>
+                  <Text 
+                    style={[styles.serviceDescription, { fontSize: fontSizes.sm }]} 
+                    numberOfLines={2}
+                  >
                     {service.description}
                   </Text>
-                  <Text style={styles.serviceCategory}>{service.category}</Text>
+                  <Text style={[styles.serviceCategory, { fontSize: fontSizes.xs }]}>
+                    {service.category}
+                  </Text>
                 </View>
               </View>
               
               <View style={styles.serviceDetails}>
                 <View style={styles.serviceMetrics}>
-                  <Text style={styles.price}>${service.price}</Text>
+                  <Text 
+                    style={[styles.price, { fontSize: fontSizes.lg }]}
+                    accessibilityLabel={`Price $${service.price}`}
+                  >
+                    ${service.price}
+                  </Text>
                   <View style={styles.metric}>
-                    <Clock size={isSmallScreen ? 14 : 16} color="#047857" />
-                    <Text style={styles.metricText}>
+                    <Clock 
+                      size={isSmallScreen ? fontSizes.sm : fontSizes.base} 
+                      color="#047857" 
+                      accessibilityLabel="Duration"
+                    />
+                    <Text 
+                      style={[styles.metricText, { fontSize: fontSizes.sm }]}
+                      accessibilityLabel={`${service.duration} ${service.duration === 1 ? 'hour' : 'hours'}`}
+                    >
                       {service.duration} {service.duration === 1 ? 'hour' : 'hours'}
                     </Text>
                   </View>
@@ -181,8 +280,12 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   style={[styles.bookButton, isSmallScreen && styles.bookButtonSmall]}
                   onPress={() => handleBookService(service)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Book ${service.name} service`}
                 >
-                  <Text style={styles.bookButtonText}>Book Now</Text>
+                  <Text style={[styles.bookButtonText, { fontSize: fontSizes.sm }]}>
+                    Book Now
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -191,7 +294,12 @@ export default function HomeScreen() {
 
         {/* Features */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Why Choose Us?</Text>
+          <Text 
+            style={[styles.sectionTitle, { fontSize: fontSizes.xl }]}
+            accessibilityRole="header"
+          >
+            Why Choose Us?
+          </Text>
           
           <View style={styles.featuresGrid}>
             {[
@@ -200,10 +308,31 @@ export default function HomeScreen() {
               { icon: '💚', title: 'Eco-Friendly', text: 'Safe, non-toxic cleaning products' },
               { icon: '💯', title: 'Satisfaction Guarantee', text: "Not happy? We'll make it right" },
             ].map((f, i) => (
-              <View key={i} style={[styles.feature, isSmallScreen && styles.featureSmall]}>
-                <View style={styles.featureIconWrapper}><Text style={styles.featureIcon}>{f.icon}</Text></View>
-                <Text style={styles.featureTitle}>{f.title}</Text>
-                <Text style={styles.featureText} numberOfLines={2}>{f.text}</Text>
+              <View 
+                key={i} 
+                style={[styles.feature, isSmallScreen && styles.featureSmall]}
+                accessibilityRole="summary"
+              >
+                <View style={styles.featureIconWrapper}>
+                  <Text 
+                    style={[styles.featureIcon, { fontSize: fontSizes.xl2 }]}
+                    accessibilityLabel={f.title}
+                  >
+                    {f.icon}
+                  </Text>
+                </View>
+                <Text 
+                  style={[styles.featureTitle, { fontSize: fontSizes.base }]}
+                  accessibilityRole="header"
+                >
+                  {f.title}
+                </Text>
+                <Text 
+                  style={[styles.featureText, { fontSize: fontSizes.sm }]} 
+                  numberOfLines={2}
+                >
+                  {f.text}
+                </Text>
               </View>
             ))}
           </View>
@@ -216,6 +345,7 @@ export default function HomeScreen() {
         animationType="slide"
         transparent={true}
         onRequestClose={handleBookingClose}
+        accessibilityViewIsModal={true}
       >
         <View style={styles.modalContainer}>
           {selectedService && (
@@ -243,11 +373,9 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    fontSize: scaleFont(16),
     color: '#6B7280',
   },
   errorText: {
-    fontSize: scaleFont(16),
     color: '#DC2626',
     textAlign: 'center',
     marginBottom: 16,
@@ -286,21 +414,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerTitle: { 
-    fontSize: scaleFont(22), 
     fontWeight: 'bold', 
     color: 'white', 
-    marginBottom: 4 
+    marginBottom: 4,
+    textAlign: 'center',
   },
   headerTitleSmall: {
-    fontSize: scaleFont(20),
+    // Size handled by dynamic font sizing
   },
   headerSubtitle: { 
-    fontSize: scaleFont(13), 
     color: 'rgba(255,255,255,0.85)', 
     textAlign: 'center' 
   },
   headerSubtitleSmall: {
-    fontSize: scaleFont(12),
+    // Size handled by dynamic font sizing
   },
   content: { flex: 1 },
   scrollContent: {
@@ -332,12 +459,10 @@ const styles = StyleSheet.create({
     alignItems: 'center' 
   },
   statNumber: { 
-    fontSize: scaleFont(18), 
     fontWeight: '700', 
     color: '#047857' 
   },
   statLabel: { 
-    fontSize: scaleFont(11), 
     color: '#6B7280', 
     marginTop: 4,
     textAlign: 'center'
@@ -347,7 +472,6 @@ const styles = StyleSheet.create({
     paddingTop: 28 
   },
   sectionTitle: { 
-    fontSize: scaleFont(18), 
     fontWeight: '700', 
     color: '#1F2937', 
     marginBottom: 16 
@@ -382,25 +506,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   serviceIcon: { 
-    fontSize: scaleFont(24) 
+    // Size handled by dynamic font sizing
   },
   serviceInfo: { 
     flex: 1 
   },
   serviceName: { 
-    fontSize: scaleFont(15), 
     fontWeight: '600', 
     color: '#111827', 
     marginBottom: 4 
   },
   serviceDescription: { 
-    fontSize: scaleFont(12), 
     color: '#6B7280', 
     lineHeight: 18, 
     marginBottom: 4 
   },
   serviceCategory: {
-    fontSize: scaleFont(11),
     color: '#059669',
     fontWeight: '600',
     textTransform: 'capitalize',
@@ -414,7 +535,6 @@ const styles = StyleSheet.create({
     flex: 1 
   },
   price: { 
-    fontSize: scaleFont(16), 
     fontWeight: 'bold', 
     color: '#047857', 
     marginBottom: 4 
@@ -424,7 +544,6 @@ const styles = StyleSheet.create({
     alignItems: 'center' 
   },
   metricText: { 
-    fontSize: scaleFont(12),
     color: '#374151',
     marginLeft: 4,
     fontWeight: '500',
@@ -445,8 +564,7 @@ const styles = StyleSheet.create({
   },
   bookButtonText: { 
     color: 'white', 
-    fontWeight: '600', 
-    fontSize: scaleFont(12) 
+    fontWeight: '600',
   },
   featuresGrid: {
     flexDirection: 'row',
@@ -477,17 +595,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   featureIcon: { 
-    fontSize: scaleFont(24) 
+    // Size handled by dynamic font sizing
   },
   featureTitle: { 
-    fontSize: scaleFont(13), 
     fontWeight: '600', 
     color: '#111827', 
     marginBottom: 4, 
     textAlign: 'center' 
   },
   featureText: { 
-    fontSize: scaleFont(11), 
     color: '#6B7280', 
     textAlign: 'center', 
     lineHeight: 16 
