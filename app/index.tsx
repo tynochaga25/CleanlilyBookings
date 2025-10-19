@@ -23,12 +23,12 @@ export default function WelcomeScreen() {
   const isLargeScreen = width > 1200;
   const isTablet = width >= 768 && width <= 1200;
   
-  // Responsive font size calculations - slightly smaller multipliers
+  // Responsive font size calculations
   const getResponsiveFontSize = (baseSize, multiplier = 0.035) => {
     return Math.max(baseSize * 0.8, Math.min(baseSize * 1.3, width * multiplier));
   };
 
-  // Responsive spacing - more compact
+  // Responsive spacing
   const getResponsiveSpacing = (baseSpacing) => {
     return baseSpacing * (isLargeScreen ? 1.1 : isTablet ? 1 : 0.9);
   };
@@ -41,118 +41,121 @@ export default function WelcomeScreen() {
       >
         <StatusBar style="light" />
         
-        {/* Hero Section */}
-        <ImageBackground 
-          source={{ uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80' }}
-          style={[
-            styles.heroSection, 
-            { 
-              height: isLargeScreen ? height * 0.75 : isTablet ? height * 0.7 : Math.max(500, height * 0.65),
-              paddingHorizontal: getResponsiveSpacing(16)
-            }
-          ]}
-          imageStyle={styles.heroImage}
-        >
-          <View style={styles.heroOverlay}>
-            {/* Logo and Branding */}
-            <View style={styles.logoContainer}>
-              <Image 
-                source={{ uri: 'https://cleanlily.co.zw/wp-content/uploads/2024/04/Cleanlily-Cleaners-logo-png.png' }} 
-                style={[
-                  styles.logoImage, 
-                  {
-                    width: isLargeScreen ? 120 : isTablet ? 100 : isVerySmallScreen ? 70 : 90,
-                    height: isLargeScreen ? 120 : isTablet ? 100 : isVerySmallScreen ? 70 : 90,
-                    marginBottom: getResponsiveSpacing(12)
-                  }
-                ]}
-                resizeMode="contain"
-              />
-              <Text 
-                style={[
-                  styles.logoText,
-                  {
-                    fontSize: getResponsiveFontSize(28, 0.055),
-                    marginBottom: getResponsiveSpacing(6)
-                  }
-                ]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                Cleanlily Cleaners
-              </Text>
-              
-              <Text style={[
-                styles.tagline,
-                {
-                  fontSize: getResponsiveFontSize(16, 0.035),
-                  marginBottom: getResponsiveSpacing(16)
-                }
-              ]}>
-                Zimbabwe's Premier Cleaning Service
-              </Text>
-            </View>
-            
-            {/* Hero Content */}
-            <View style={styles.heroContent}>
-              <Text style={[
-                styles.heroText,
-                {
-                  fontSize: getResponsiveFontSize(14, 0.032),
-                  marginBottom: getResponsiveSpacing(30),
-                  lineHeight: getResponsiveFontSize(20, 0.04)
-                }
-              ]}>
-                Professional cleaning services for your home or office. 
-                Experience the Cleanlily difference with our trained professionals 
-                and eco-friendly cleaning products.
-              </Text>
-              
-              <View style={[
-                styles.buttonContainer, 
-                {
-                  flexDirection: isVerySmallScreen ? 'column' : 'row',
-                  gap: getResponsiveSpacing(12),
-                  maxWidth: isLargeScreen ? 450 : isTablet ? 400 : 350
-                }
-              ]}>
-                <TouchableOpacity
+        {/* Hero Section - Full width green background */}
+        <View style={styles.heroContainer}>
+          <ImageBackground 
+            source={{ uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80' }}
+            style={[
+              styles.heroSection, 
+              { 
+                height: isLargeScreen ? height * 0.75 : isTablet ? height * 0.7 : Math.max(500, height * 0.65),
+              }
+            ]}
+            imageStyle={styles.heroImage}
+          >
+            <View style={styles.heroOverlay}>
+              {/* Logo and Branding */}
+              <View style={styles.logoContainer}>
+                <Image 
+                  source={{ uri: 'https://cleanlily.co.zw/wp-content/uploads/2024/04/Cleanlily-Cleaners-logo-png.png' }} 
                   style={[
-                    styles.primaryButton,
+                    styles.logoImage, 
                     {
-                      flex: isVerySmallScreen ? 0 : 1,
-                      paddingVertical: getResponsiveSpacing(14)
+                      width: isLargeScreen ? 120 : isTablet ? 100 : isVerySmallScreen ? 70 : 90,
+                      height: isLargeScreen ? 120 : isTablet ? 100 : isVerySmallScreen ? 70 : 90,
+                      marginBottom: getResponsiveSpacing(12)
                     }
                   ]}
-                  onPress={() => router.push('./auth/signup')}
+                  resizeMode="contain"
+                />
+                <Text 
+                  style={[
+                    styles.logoText,
+                    {
+                      fontSize: getResponsiveFontSize(28, 0.055),
+                      marginBottom: getResponsiveSpacing(6)
+                    }
+                  ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
-                  <Text style={[
-                    styles.primaryButtonText,
-                    { fontSize: getResponsiveFontSize(15, 0.032) }
-                  ]}>Book Now</Text>
-                  <Feather name="arrow-right" size={getResponsiveFontSize(18, 0.035)} color="#fff" style={styles.buttonIcon} />
-                </TouchableOpacity>
+                  Cleanlily Cleaners
+                </Text>
+                
+                <Text style={[
+                  styles.tagline,
+                  {
+                    fontSize: getResponsiveFontSize(16, 0.035),
+                    marginBottom: getResponsiveSpacing(16)
+                  }
+                ]}>
+                  Zimbabwe's Premier Cleaning Service
+                </Text>
+              </View>
+              
+              {/* Hero Content */}
+              <View style={styles.heroContent}>
+                <Text style={[
+                  styles.heroText,
+                  {
+                    fontSize: getResponsiveFontSize(14, 0.032),
+                    marginBottom: getResponsiveSpacing(30),
+                    lineHeight: getResponsiveFontSize(20, 0.04)
+                  }
+                ]}>
+                  Professional cleaning services for your home or office. 
+                  Experience the Cleanlily difference with our trained professionals 
+                  and eco-friendly cleaning products.
+                </Text>
+                
+                <View style={[
+                  styles.buttonContainer, 
+                  {
+                    flexDirection: isVerySmallScreen ? 'column' : 'row',
+                    gap: getResponsiveSpacing(12),
+                    maxWidth: isLargeScreen ? 500 : isTablet ? 450 : 380
+                  }
+                ]}>
+                  <TouchableOpacity
+                    style={[
+                      styles.primaryButton,
+                      {
+                        flex: isVerySmallScreen ? 0 : 1,
+                        minHeight: getResponsiveSpacing(52),
+                        paddingVertical: getResponsiveSpacing(14)
+                      }
+                    ]}
+                    onPress={() => router.push('./auth/signup')}
+                  >
+                    <Text style={[
+                      styles.primaryButtonText,
+                      { fontSize: getResponsiveFontSize(16, 0.034) }
+                    ]}>Book Now</Text>
+                    <Feather name="arrow-right" size={getResponsiveFontSize(18, 0.035)} color="#fff" style={styles.buttonIcon} />
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[
-                    styles.secondaryButton,
-                    {
-                      flex: isVerySmallScreen ? 0 : 1,
-                      paddingVertical: getResponsiveSpacing(14)
-                    }
-                  ]}
-                  onPress={() => router.push('./auth/signin')}
-                >
-                  <Text style={[
-                    styles.secondaryButtonText,
-                    { fontSize: getResponsiveFontSize(15, 0.032) }
-                  ]}>Sign In</Text>
-                  <Feather name="log-in" size={getResponsiveFontSize(18, 0.035)} color="#059669" style={styles.buttonIcon} />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.secondaryButton,
+                      {
+                        flex: isVerySmallScreen ? 0 : 1,
+                        minHeight: getResponsiveSpacing(52),
+                        paddingVertical: getResponsiveSpacing(14)
+                      }
+                    ]}
+                    onPress={() => router.push('./auth/signin')}
+                  >
+                    <Text style={[
+                      styles.secondaryButtonText,
+                      { fontSize: getResponsiveFontSize(16, 0.034) }
+                    ]}>Sign In</Text>
+                    <Feather name="log-in" size={getResponsiveFontSize(18, 0.035)} color="#059669" style={styles.buttonIcon} />
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </ImageBackground>
+          </ImageBackground>
+        </View>
         
         {/* Features Section */}
         <View style={[
@@ -396,6 +399,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#fff',
   },
+  heroContainer: {
+    backgroundColor: '#059669', // Green background that covers full width
+  },
   heroSection: {
     justifyContent: 'center',
     minHeight: 500,
@@ -409,6 +415,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: '100%',
     paddingVertical: 30,
+    paddingHorizontal: 16,
   },
   logoContainer: {
     alignItems: 'center',
@@ -453,41 +460,47 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: '#047857',
-    paddingHorizontal: 20,
-    borderRadius: 14,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  primaryButtonText: {
+    color: 'white',
+    fontWeight: '700',
+    marginRight: 8,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  secondaryButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 24,
+    borderRadius: 16,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 6,
-  },
-  primaryButtonText: {
-    color: 'white',
-    fontWeight: '700',
-    marginRight: 6,
-    letterSpacing: 0.5,
-  },
-  secondaryButton: {
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
-    borderRadius: 14,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
+    elevation: 5,
+    borderWidth: 2,
+    borderColor: 'rgba(5, 150, 105, 0.3)',
   },
   secondaryButtonText: {
     color: '#059669',
     fontWeight: '700',
-    marginRight: 6,
-    letterSpacing: 0.5,
+    marginRight: 8,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
   buttonIcon: {
     marginLeft: 4,
@@ -622,7 +635,7 @@ const styles = StyleSheet.create({
   ctaButton: {
     backgroundColor: '#10b981',
     paddingHorizontal: 28,
-    borderRadius: 14,
+    borderRadius: 16,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -631,6 +644,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 6,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   ctaButtonText: {
     color: 'white',
