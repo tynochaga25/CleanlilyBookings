@@ -138,7 +138,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Reduced Header Size */}
+      {/* Compact Header with Centered Content */}
       <View style={[styles.header, isSmallScreen && styles.headerSmall]}>
         <View style={styles.headerContent}>
           <Image
@@ -151,7 +151,7 @@ export default function HomeScreen() {
             <Text 
               style={[
                 styles.headerTitle, 
-                { fontSize: fontSizes.xl4 },
+                { fontSize: fontSizes.xl3 },
                 isSmallScreen && styles.headerTitleSmall
               ]}
               accessibilityRole="header"
@@ -161,7 +161,7 @@ export default function HomeScreen() {
             <Text 
               style={[
                 styles.headerSubtitle, 
-                { fontSize: fontSizes.sm },
+                { fontSize: fontSizes.xs },
                 isSmallScreen && styles.headerSubtitleSmall
               ]}
             >
@@ -403,45 +403,49 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
-  // Reduced Header Size
+  // Compact Header with Centered Content
   header: {
     backgroundColor: '#047857',
-    paddingTop: 40, // Reduced from 50
+    paddingTop: 35, // Reduced from 40
     paddingHorizontal: 20,
-    paddingBottom: 20, // Reduced from 30
-    borderBottomLeftRadius: 24, // Reduced from 30
-    borderBottomRightRadius: 24, // Reduced from 30
+    paddingBottom: 15, // Reduced from 20
+    borderBottomLeftRadius: 20, // Reduced from 24
+    borderBottomRightRadius: 20, // Reduced from 24
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
     elevation: 8,
+    minHeight: 100, // Added fixed height
   },
   headerSmall: {
-    paddingTop: 30, // Reduced from 40
-    paddingBottom: 16, // Reduced from 25
+    paddingTop: 25, // Reduced from 30
+    paddingBottom: 12, // Reduced from 16
+    minHeight: 85, // Smaller fixed height for small screens
   },
   headerContent: {
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column', // Changed back to column for centered layout
   },
   logo: { 
-    width: width * 0.25, // Reduced from 0.3
-    height: width * 0.15, // Reduced from 0.18
-    marginBottom: 12, // Reduced from 15
+    width: width * 0.18, // Reduced from 0.25
+    height: width * 0.12, // Reduced from 0.15
+    marginBottom: 8, // Reduced margin
   },
   logoSmall: {
-    width: width * 0.2, // Reduced from 0.25
-    height: width * 0.12, // Reduced from 0.15
-    marginBottom: 8, // Reduced from 12
+    width: width * 0.15, // Reduced from 0.2
+    height: width * 0.1, // Reduced from 0.12
+    marginBottom: 6, // Reduced margin
   },
   headerTextContainer: {
-    alignItems: 'center',
+    alignItems: 'center', // Centered text
   },
   headerTitle: { 
     fontWeight: '800', 
     color: 'white', 
-    marginBottom: 6, // Reduced from 8
-    textAlign: 'center',
+    marginBottom: 2, // Reduced from 6
+    textAlign: 'center', // Centered text
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -452,7 +456,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: { 
     color: 'rgba(255,255,255,0.95)', 
-    textAlign: 'center',
+    textAlign: 'center', // Centered text
     fontWeight: '600',
     letterSpacing: 0.3,
   },
@@ -470,7 +474,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'white',
     marginHorizontal: 20,
-    marginTop: -16, // Adjusted for smaller header
+    marginTop: -12, // Adjusted for smaller header
     borderRadius: 20,
     padding: 20,
     justifyContent: 'space-between',
@@ -485,7 +489,7 @@ const styles = StyleSheet.create({
   statsContainerSmall: {
     marginHorizontal: 16,
     padding: 16,
-    marginTop: -12, // Adjusted for smaller header
+    marginTop: -10, // Adjusted for smaller header
   },
   statItem: { 
     flex: 1, 
