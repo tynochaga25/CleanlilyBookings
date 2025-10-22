@@ -81,11 +81,16 @@ export default function SignUp() {
       });
 
       if (authError) {
-        if (!authError.message.includes('Email confirmation')) {
+        // If it's an email confirmation error, we still consider it a success
+        // because the user was created and email was sent
+        if (authError.message.includes('Email confirmation')) {
+          // Continue with profile creation
+        } else {
           throw authError;
         }
       }
 
+      // If we have a user (successful signup), create their profile
       if (authData?.user) {
         // Check if this email should be an admin (you can define admin emails in environment variables)
         const adminEmails = ['admin@cleanlily.com', 'owner@cleanlily.com']; // Add your admin emails here
@@ -101,23 +106,14 @@ export default function SignUp() {
             role: role,
           }]);
 
-        if (profileError && !profileError.message.includes('duplicate key')) {
-          throw profileError;
+        // Even if there's a profile error (like duplicate), we still show success
+        // because the auth user was created
+        if (profileError) {
+          console.warn('Profile creation warning:', profileError.message);
+          // Continue to show success message
         }
 
-        // SUCCESS ALERT - Show confirmation message
-        Alert.alert(
-          'Success!',
-          'Your account has been created successfully! Please check your email to confirm your account before signing in.',
-          [
-            { 
-              text: 'OK', 
-              onPress: () => router.push('/auth/signin') 
-            }
-          ]
-        );
-        
-        // Clear form after successful signup
+        // Clear form and show success message
         setFormData({
           fullName: '',
           email: '',
@@ -125,34 +121,46 @@ export default function SignUp() {
           password: '',
           confirmPassword: '',
         });
+
+        Alert.alert(
+          'Account Created Successfully!',
+          'Thank you for signing up! Please check your email to confirm your account before signing in.',
+          [
+            { 
+              text: 'OK', 
+              onPress: () => router.push('/auth/signin') 
+            }
+          ]
+        );
+        return; // Exit early on success
       }
+
+      // If we reach here without a user, something went wrong
+      throw new Error('Failed to create user account');
+
     } catch (error) {
-      if (error instanceof Error && 
-          !error.message.includes('JWT expired') &&
-          !error.message.includes('duplicate key') &&
-          !error.message.includes('already registered')) {
-        Alert.alert('Error', error.message || 'Failed to create account');
+      console.error('Signup error:', error);
+      
+      // Only show error alert for actual errors, not for email confirmation cases
+      if (error instanceof Error) {
+        if (error.message.includes('User already registered') || 
+            error.message.includes('already registered')) {
+          Alert.alert(
+            'Account Created',
+            'This email is already registered. Please check your email for verification or try signing in.',
+            [{ text: 'OK' }]
+          );
+        } else if (!error.message.includes('Email confirmation')) {
+          Alert.alert(
+            'Sign Up Failed', 
+            error.message || 'Unable to create account. Please try again.'
+          );
+        }
       } else {
-        // This handles cases where the user might already exist but we still want to show success
         Alert.alert(
-          'Success!',
-          'Your account has been created successfully! Please check your email to confirm your account before signing in.',
-          [
-            { 
-              text: 'OK', 
-              onPress: () => router.push('/auth/signin') 
-            }
-          ]
+          'Sign Up Failed', 
+          'An unexpected error occurred. Please try again.'
         );
-        
-        // Clear form
-        setFormData({
-          fullName: '',
-          email: '',
-          phone: '',
-          password: '',
-          confirmPassword: '',
-        });
       }
     } finally {
       setLoading(false);
