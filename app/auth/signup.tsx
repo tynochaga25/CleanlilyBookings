@@ -105,11 +105,26 @@ export default function SignUp() {
           throw profileError;
         }
 
+        // SUCCESS ALERT - Show confirmation message
         Alert.alert(
-          'Success',
-          'Account created! Please check your email for verification.',
-          [{ text: 'OK', onPress: () => router.push('/auth/signin') }]
+          'Success!',
+          'Your account has been created successfully! Please check your email to confirm your account before signing in.',
+          [
+            { 
+              text: 'OK', 
+              onPress: () => router.push('/auth/signin') 
+            }
+          ]
         );
+        
+        // Clear form after successful signup
+        setFormData({
+          fullName: '',
+          email: '',
+          phone: '',
+          password: '',
+          confirmPassword: '',
+        });
       }
     } catch (error) {
       if (error instanceof Error && 
@@ -118,11 +133,26 @@ export default function SignUp() {
           !error.message.includes('already registered')) {
         Alert.alert('Error', error.message || 'Failed to create account');
       } else {
+        // This handles cases where the user might already exist but we still want to show success
         Alert.alert(
-          'Success',
-          'Account created! Please check your email for verification.',
-          [{ text: 'OK', onPress: () => router.push('/auth/signin') }]
+          'Success!',
+          'Your account has been created successfully! Please check your email to confirm your account before signing in.',
+          [
+            { 
+              text: 'OK', 
+              onPress: () => router.push('/auth/signin') 
+            }
+          ]
         );
+        
+        // Clear form
+        setFormData({
+          fullName: '',
+          email: '',
+          phone: '',
+          password: '',
+          confirmPassword: '',
+        });
       }
     } finally {
       setLoading(false);
