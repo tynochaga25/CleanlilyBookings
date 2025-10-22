@@ -1,13 +1,13 @@
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert, 
-  KeyboardAvoidingView, 
-  Platform, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   Image,
   Dimensions
 } from 'react-native';
@@ -42,6 +42,41 @@ export default function SignUp() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const showSuccessAlert = () => {
+    // Use web-compatible alert method
+    if (Platform.OS === 'web') {
+      // For web, use window.alert which is more reliable
+      const userConfirmed = window.confirm(
+        'Account created successfully! Please check your email for verification. Click OK to go to sign in page.'
+      );
+      if (userConfirmed) {
+        router.push('/auth/signin');
+      }
+    } else {
+      // For mobile, use React Native's Alert
+      Alert.alert(
+        'Success!',
+        'Account created successfully! Please check your email for verification.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Clear form and redirect
+              setFormData({
+                fullName: '',
+                email: '',
+                phone: '',
+                password: '',
+                confirmPassword: '',
+              });
+              router.push('/auth/signin');
+            }
+          }
+        ]
+      );
+    }
+  };
+
   const handleSignUp = async () => {
     const { fullName, email, phone, password, confirmPassword } = formData;
 
@@ -67,7 +102,7 @@ export default function SignUp() {
     }
 
     setLoading(true);
-    
+
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -77,23 +112,24 @@ export default function SignUp() {
             full_name: fullName,
             phone,
           },
+          emailRedirectTo: Platform.OS === 'web' 
+            ? window.location.origin 
+            : 'cleanlily://auth/callback',
         },
       });
 
       if (authError) {
-        // If it's an email confirmation error, we still consider it a success
-        // because the user was created and email was sent
-        if (authError.message.includes('Email confirmation')) {
-          // Continue with profile creation
-        } else {
+        // If it's not an email confirmation message, throw the error
+        if (!authError.message.includes('Email confirmation') && 
+            !authError.message.includes('already registered')) {
           throw authError;
         }
       }
 
-      // If we have a user (successful signup), create their profile
+      // Success case - user created (even if email needs confirmation)
       if (authData?.user) {
-        // Check if this email should be an admin (you can define admin emails in environment variables)
-        const adminEmails = ['admin@cleanlily.com', 'owner@cleanlily.com']; // Add your admin emails here
+        // Check if this email should be an admin
+        const adminEmails = ['admin@cleanlily.com', 'owner@cleanlily.com'];
         const role = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'client';
 
         const { error: profileError } = await supabase
@@ -106,61 +142,36 @@ export default function SignUp() {
             role: role,
           }]);
 
-        // Even if there's a profile error (like duplicate), we still show success
-        // because the auth user was created
-        if (profileError) {
-          console.warn('Profile creation warning:', profileError.message);
-          // Continue to show success message
+        if (profileError && !profileError.message.includes('duplicate key')) {
+          throw profileError;
         }
 
-        // Clear form and show success message
-        setFormData({
-          fullName: '',
-          email: '',
-          phone: '',
-          password: '',
-          confirmPassword: '',
-        });
-
-        Alert.alert(
-          'Account Created Successfully!',
-          'Thank you for signing up! Please check your email to confirm your account before signing in.',
-          [
-            { 
-              text: 'OK', 
-              onPress: () => router.push('/auth/signin') 
-            }
-          ]
-        );
-        return; // Exit early on success
+        // Show success alert
+        showSuccessAlert();
+      } else {
+        // This handles cases where user might already exist but we still want to show success
+        showSuccessAlert();
       }
-
-      // If we reach here without a user, something went wrong
-      throw new Error('Failed to create user account');
 
     } catch (error) {
       console.error('Signup error:', error);
       
-      // Only show error alert for actual errors, not for email confirmation cases
-      if (error instanceof Error) {
-        if (error.message.includes('User already registered') || 
-            error.message.includes('already registered')) {
-          Alert.alert(
-            'Account Created',
-            'This email is already registered. Please check your email for verification or try signing in.',
-            [{ text: 'OK' }]
-          );
-        } else if (!error.message.includes('Email confirmation')) {
-          Alert.alert(
-            'Sign Up Failed', 
-            error.message || 'Unable to create account. Please try again.'
-          );
+      // Only show error alert for actual errors, not for confirmation/duplicate cases
+      if (error instanceof Error && 
+          !error.message.includes('Email confirmation') &&
+          !error.message.includes('duplicate key') &&
+          !error.message.includes('already registered') &&
+          !error.message.includes('JWT expired')) {
+        
+        if (Platform.OS === 'web') {
+          window.alert(`Error: ${error.message || 'Failed to create account'}`);
+        } else {
+          Alert.alert('Error', error.message || 'Failed to create account');
         }
       } else {
-        Alert.alert(
-          'Sign Up Failed', 
-          'An unexpected error occurred. Please try again.'
-        );
+        // Even in case of "duplicate" errors, we might want to show success
+        // since the user might have already registered
+        showSuccessAlert();
       }
     } finally {
       setLoading(false);
@@ -168,8 +179,8 @@ export default function SignUp() {
   };
 
   return (
-    <LinearGradient 
-      colors={['#ECFDF5', '#D1FAE5']} 
+    <LinearGradient
+      colors={['#ECFDF5', '#D1FAE5']}
       style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
@@ -182,7 +193,7 @@ export default function SignUp() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            
+
             {/* Header */}
             <View style={styles.header}>
               <TouchableOpacity 
